@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -31,11 +32,11 @@ public class AuthController {
 
     // 카카오 로그인
     @PostMapping("login/kakao/toeken/{accessToken}")
-    public ResponseEntity<Void> kakaoLogin(@PathVariable("accessToken") String accessToken) {
+    public ResponseEntity<Void> kakaoLogin(@PathVariable("accessToken") String accessToken) throws IOException {
 
         authService.kakaoLogin(accessToken);
 
-        return ResponseEntity(HttpStatus.OK);
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     /*
