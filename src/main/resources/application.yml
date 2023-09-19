@@ -1,0 +1,70 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${application.spring.datasource.url}
+    username: ${application.spring.datasource.username}
+    password: ${application.spring.datasource.password}
+    databaseAPI: ${application.spring.datasource.databaseAPI}
+
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${spring.security.oauth2.client.registeration.kakao.client-id}
+            client-secret: ${spring.security.oauth2.client.registeration.kakao.client-secret}
+            redirect-uri: ${spring.security.oauth2.client.registeration.kakao.redirect-uri}/auth/login/kakao
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            client-name: Kakao
+            scope:
+              - profile_nickname
+              - account_email
+              - profile_image
+
+          apple:
+            client-id: ${spring.security.oauth2.client.registeration.apple.client-id}
+            client-secret: ${spring.security.oauth2.client.registeration.apple.client-secret.p8key}/${spring.security.oauth2.client.registeration.apple.client-secret.key-id}/${spring.security.oauth2.client.registeration.apple.client-secret.team-id}
+            redirect-uri: ${spring.security.oauth2.client.registeration.apple.redirect-uri}/auth/login/apple
+            authorization-grant-type: authorization_code
+            client-authentication-method: POST
+            client-name: Apple
+            scope:
+              - profile
+              - email
+
+          google:
+            client-id: ${spring.security.oauth2.client.registeration.google.client-id}
+            client-secret: ${spring.security.oauth2.client.registeration.google.client-secret}
+            scope:
+              - profile
+              - email
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+          apple:
+            authorizationUri: https://appleid.apple.com/auth/authorize?response_mode=form_post
+            tokenUri: https://appleid.apple.com/auth/token
+
+jwt:
+  secret: ${application.jwt.secret}
+  secret_refresh: ${application.jwt.secret_refresh}
