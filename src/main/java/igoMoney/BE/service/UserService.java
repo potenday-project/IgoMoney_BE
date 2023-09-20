@@ -35,6 +35,14 @@ public class UserService {
         return response;
     }
 
+    // 닉네임 중복 조회
+    @Transactional(readOnly = true)
+    public void checkNicknameDuplicate(String nickname) {
+
+        if (userRepository.existsByNickname(nickname)) {
+            throw new CustomException(ErrorCode.EXIST_MEMBER_NICKNAME);
+        }
+    }
 
     // 예외 처리 - 존재하는 user인지
     private User getUserOrThrow(Long memberId) {

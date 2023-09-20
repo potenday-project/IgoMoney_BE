@@ -26,4 +26,13 @@ public class UserController {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    // 닉네임 중복 조회
+    @GetMapping("nickname-check/{nickname}")
+    public ResponseEntity<Void> checkNicknameDuplicate(@PathVariable("nickname") String nickname) {
+
+        userService.checkNicknameDuplicate(nickname);
+
+        return new ResponseEntity(HttpStatus.OK);
+    }
 }
