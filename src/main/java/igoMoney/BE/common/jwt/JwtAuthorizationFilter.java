@@ -1,6 +1,5 @@
 package igoMoney.BE.common.jwt;
-
-import igoMoney.BE.domain.User;
+/*
 import igoMoney.BE.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,24 +7,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
     //private final RedisTemplate redisTemplate;
 
-    public JwtAuthorizationFilter(AuthenticationManager authenticationManager, UserRepository userRepository, JwtUtil jwtUtil, RedisTemplate redisTemplate) {
+    public JwtAuthorizationFilter(AuthenticationManager authenticationManager, UserRepository userRepository, JwtUtils jwtUtils, RedisTemplate redisTemplate) {
         super(authenticationManager);
         this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
+        this.jwtUtils = jwtUtils;
     }
 
     @Override
@@ -64,7 +59,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                 // 강제로 시큐리티의 세션에 접근하여 값 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-        }*/
+        }
         chain.doFilter(request, response);
     }
-}
+}*/

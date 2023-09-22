@@ -2,6 +2,9 @@ server:
   port: 8080
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${application.spring.datasource.url}
@@ -38,8 +41,8 @@ spring:
 
           apple:
             client-id: ${spring.security.oauth2.client.registeration.apple.client-id}
-            client-secret: ${spring.security.oauth2.client.registeration.apple.client-secret.p8key}/${spring.security.oauth2.client.registeration.apple.client-secret.key-id}/${spring.security.oauth2.client.registeration.apple.client-secret.team-id}
-            redirect-uri: ${spring.security.oauth2.client.registeration.apple.redirect-uri}/auth/login/apple
+            client-secret: ${spring.security.oauth2.client.registeration.apple.client-secret.key-id}/${spring.security.oauth2.client.registeration.apple.client-secret.key-id}/${spring.security.oauth2.client.registeration.apple.client-secret.team-id}
+            redirect-uri: ${spring.security.oauth2.client.registeration.apple.redirect-uri}
             authorization-grant-type: authorization_code
             client-authentication-method: POST
             client-name: Apple

@@ -3,12 +3,15 @@ package igoMoney.BE.service;
 import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
 import igoMoney.BE.domain.User;
+import igoMoney.BE.dto.request.UserUpdateRequest;
 import igoMoney.BE.dto.response.UserResponse;
 import igoMoney.BE.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +38,7 @@ public class UserService {
         return response;
     }
 
+
     // 닉네임 중복확인
     @Transactional(readOnly = true)
     public void checkNicknameDuplicate(String nickname) {
@@ -44,10 +48,24 @@ public class UserService {
         }
     }
 
-    // 예외 처리 - 존재하는 user인지
-    private User getUserOrThrow(Long memberId) {
 
-        return userRepository.findById(memberId)
+    // 닉네임 변경하기 (회원가입 시 애플은 빈칸으로 가입됨. 닉네임 설정 후 홈화면 나옴)
+    public void updateUser(UserUpdateRequest request) throws IOException {
+
+        User findUser = getUserOrThrow(request.getId());
+
+        if (!request.getNickname().equals(findUser.getNickname())) {
+            checkNicknameDuplicate(request.getNickname());
+        }
+
+        findUser.updateUser(request);
+    }
+
+
+    // 예외 처리 - 존재하는 user인지
+    private User getUserOrThrow(Long userId) {
+
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
     }
 }

@@ -6,6 +6,9 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import igoMoney.BE.common.jwt.dto.TokenDto;
 import igoMoney.BE.domain.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,17 +16,32 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import com.auth0.jwt.JWT;
 import java.util.Date;
+import java.security.Key;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtUtil {
+public class JwtUtils {
 
     @Value("${jwt.secret}")
     private String secretKey;
 
     @Value("${jwt.secret_refresh}")
     private String refreshSecretKey;
+
+    private Key key;
+
+    public JwtUtils(String secret) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public Claims getClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(key)
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
 
     // 토큰 생성
     public TokenDto createToken(User user) {
