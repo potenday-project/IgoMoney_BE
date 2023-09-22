@@ -19,6 +19,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -50,6 +51,9 @@ public class AppleJwtUtils extends JwtUtils {
 
     @Value("${spring.security.oauth2.client.registeration.apple.key-id}")
     private String keyId;
+
+    @Value("${spring.security.oauth2.client.registeration.apple.p8key}")
+    private String p8PrivateKey;
 
     @Value("${spring.security.oauth2.client.registeration.apple.team-id}")
     private String teamId;
@@ -120,7 +124,8 @@ public class AppleJwtUtils extends JwtUtils {
     // .p8 키
     private PrivateKey getPrivateKey() throws IOException {
         ClassPathResource resource = new ClassPathResource("p8_key.txt");
-        String privateKey = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+        // String privateKey = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+        String privateKey = new String(FileCopyUtils.copyToByteArray(resource.getInputStream()));
         Reader pemReader = new StringReader(privateKey);
         PEMParser pemParser = new PEMParser(pemReader);
         JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
