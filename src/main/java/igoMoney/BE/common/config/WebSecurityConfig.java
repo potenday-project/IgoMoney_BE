@@ -1,14 +1,14 @@
 package igoMoney.BE.common.config;
 
-import igoMoney.BE.common.jwt.*;
-import igoMoney.BE.repository.UserRepository;
-import igoMoney.BE.common.jwt.JwtUtils;
+//import igoMoney.BE.common.jwt.*;
+//import igoMoney.BE.repository.UserRepository;
+//import igoMoney.BE.common.jwt.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
+//import org.springframework.data.redis.core.RedisTemplate;
 //import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+//import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -54,12 +54,25 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                     //.requestMatchers("/**").hasRole("ROLE_USER")
                     .requestMatchers("/**").permitAll()
+                    .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/auth/login/apple/page").permitAll()
                     //.requestMatchers("/auth/login/kakao/**").permitAll() // 로그인 api
                     //.anyRequest().authenticated() // 그 외 인증 없이 접근X
                 )
                 .build(); // JwtFilter를 addFilterBefore로 등록했던 JwtSecurityConfig class 적용
 
     }
+
+//    private final AuthenticationEntryPoint unauthorizedEntryPoint =
+//            (request, response, authException) -> {
+//                ErrorResponse fail = ...; // Custom error response.
+//                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+//                String json = objectMapper.writeValueAsString(fail);
+//                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//                PrintWriter writer = response.getWriter();
+//                writer.write(json);
+//                writer.flush();
+//            };
 
 //    // PasswordEncoder는 BCryptPasswordEncoder를 사용
 //    @Bean

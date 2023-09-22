@@ -141,6 +141,7 @@ public class AppleJwtUtils extends JwtUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            throw new CustomException(ErrorCode.ID_TOKEN_INVALID);
         }
 
         return null;
