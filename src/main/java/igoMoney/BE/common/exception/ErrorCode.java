@@ -15,6 +15,8 @@ public enum ErrorCode {
     // Token 예외
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
+    ID_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다."),
+    ID_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "ID토큰이 만료되었습니다."),
 
     // login 예외
     LOGIN_CONNECTION_ERROR(HttpStatus.BAD_REQUEST, "로그인 요청 오류");

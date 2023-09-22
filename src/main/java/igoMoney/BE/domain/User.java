@@ -2,6 +2,7 @@ package igoMoney.BE.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import igoMoney.BE.common.entity.BaseEntity;
+import igoMoney.BE.dto.request.UserUpdateRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,5 +31,9 @@ public class User extends BaseEntity {
     @Column(unique = true, length = 20)
     private String nickname;
     private String image; // Storage에 저장된 이미지 파일 이름
-    private String role; // USER 혹은 ADMIN
+    private String role; // ROLE_USER 혹은 ROLE_ADMIN
+
+    public void updateUser(UserUpdateRequest request) {
+        this.nickname = request.getNickname();
+    }
 }

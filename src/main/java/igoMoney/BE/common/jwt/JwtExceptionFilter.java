@@ -1,5 +1,5 @@
 package igoMoney.BE.common.jwt;
-
+/*
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -48,4 +48,4 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(res.getOutputStream(), body);
     }
-}
+}*/

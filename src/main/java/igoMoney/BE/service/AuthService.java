@@ -2,18 +2,16 @@ package igoMoney.BE.service;
 
 import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
-import igoMoney.BE.common.jwt.JwtUtil;
-import igoMoney.BE.common.jwt.dto.TokenDto;
+import igoMoney.BE.common.jwt.JwtUtils;
 import igoMoney.BE.domain.RefreshToken;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
-import igoMoney.BE.dto.response.AuthTokenResponse;
 import igoMoney.BE.dto.response.UserResponse;
 import igoMoney.BE.repository.UserRepository;
 import igoMoney.BE.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +23,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.IOException;
 
-import org.springframework.stereotype.Service;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
@@ -37,11 +33,32 @@ import com.google.gson.JsonParser;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    //private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    // 애플 회원가입
+    public void AppleSignUp(String sub, String email) {
+
+        // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
+        User findUser = userRepository.findByEmailAndProvider(email, "apple");
+
+        // DB에 사용자가 없다면, 애플 로그인을 처음 한 사용자이니, DB에 사용자 정보를 저장(회원가입 시켜줌)
+        if (findUser == null) {
+
+            User user = User.builder()
+                    .provider("apple")
+                    .loginId(sub) // ID 토큰의 sub
+                    .email(email)
+                    .role("ROLE_USER")
+                    .build();
+
+            findUser = userRepository.save(user);
+        }
+    }
+
+    // 카카오
     public String getAccessToken (String authorize_code) {
         String access_Token = "";
         String refresh_Token = "";
@@ -183,44 +200,17 @@ public class AuthService {
         }
     }
 
-    // 애플 로그인
-//    public AuthTokenResponse appleLogin(AuthKakaoLoginRequest request) {
-//
-//        User findUser = userRepository.findByEmailAndProvider(request.getEmail(), "apple");
-//
-//        if (findUser == null) {
-//
-//            User user = User.builder()
-//                    .provider("apple")
-//                    .email(request.getEmail())
-//                    .image(request.getPicture())
-//                    .nickname(request.getNickname())
-//                    .role("ROLE_USER")
-//                    .build();
-//
-//            findUser = userRepository.save(user);
-//        }
-//
-//        TokenDto tokenDto = jwtUtil.createToken(findUser);
-//        refreshTokenService.saveRefreshToken(tokenDto);
-//
-//        AuthTokenResponse response = AuthTokenResponse.builder()
-//                .accessToken(tokenDto.getAccessToken())
-//                .refreshToken(tokenDto.getRefreshToken())
-//                .role(findUser.getRole())
-//                .build();
-//
-//        return response;
-//    }
 
-    // accessToken 재발급
+
+
+    // [카카오] accessToken 재발급
     public AuthRecreateTokenResponse refresh(String request) {
 
         String refreshToken = request.replace("Bearer ", "");
 
         // refresh 토큰 유효한지 확인
-        jwtUtil.validateRefreshToken(refreshToken);
-        String loginId = jwtUtil.getUsernameFromRefreshToken(refreshToken);
+        jwtUtils.validateRefreshToken(refreshToken);
+        String loginId = jwtUtils.getUsernameFromRefreshToken(refreshToken);
         RefreshToken findRefreshToken = refreshTokenRepository.findByKeyLoginId(loginId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TOKEN_INVALID));
         if (!refreshToken.equals(findRefreshToken.getRefreshToken())) {
@@ -229,7 +219,7 @@ public class AuthService {
 
         User findUser = userRepository.findByLoginId(loginId);
 
-        String createdAccessToken = jwtUtil.recreateAccessToken(findUser);
+        String createdAccessToken = jwtUtils.recreateAccessToken(findUser);
 
         if (createdAccessToken == null) {
             throw new CustomException(ErrorCode.TOKEN_EXPIRED);
