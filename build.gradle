@@ -53,6 +53,10 @@ dependencies {
 	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.0'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '3.10'
+	implementation group: 'jakarta.xml.bind', name: 'jakarta.xml.bind-api', version: '4.0.0'
+	implementation 'javax.xml.bind:jaxb-api:2.3.0'
+	implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.0'
+	implementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
 
 	//redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
