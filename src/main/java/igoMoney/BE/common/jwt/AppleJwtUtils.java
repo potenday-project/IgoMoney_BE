@@ -33,6 +33,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
@@ -96,7 +98,7 @@ public class AppleJwtUtils extends JwtUtils {
         } catch (SignatureException e) {
         } catch (MalformedJwtException e) {
             //토큰 서명 검증 or 구조 문제 (Invalid token)
-            throw new CustomException(ErrorCode.ID_TOKEN_INVALID);
+            throw new CustomException(ErrorCode.ID_TOKEN_INVALID_1);
         } catch (ExpiredJwtException e) {
             //토큰이 만료됐기 때문에 클라이언트는 토큰을 refresh 해야함.
             throw new CustomException(ErrorCode.ID_TOKEN_EXPIRED);
@@ -146,7 +148,7 @@ public class AppleJwtUtils extends JwtUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(ErrorCode.ID_TOKEN_INVALID);
+            throw new CustomException(ErrorCode.ID_TOKEN_INVALID_2);
         }
 
         return null;
@@ -183,33 +185,39 @@ public class AppleJwtUtils extends JwtUtils {
     // 2) refresh token으로 access token 재발급
     public AppleTokenResponse getTokenResponse(AppleTokenRequest appleTokenRequest) {
 
-        AppleTokenResponse response = appleClient.getToken(appleTokenRequest);
-        return response;
+        try{
+            AppleTokenResponse response = appleClient.getToken(appleTokenRequest);
+            return response;
+        } catch (Exception e){
+            throw new CustomException(ErrorCode.AUTH_CODE_INVALID);
+        }
     }
 
-    public void checkIdToken(String id_token) {
+    public void checkIdToken(String id_token) throws ParseException {
 
-        Jws<Claims> jws = null;
-        jws = (Jws<Claims>) getClaims(id_token);
+        Claims jws = null;
+        jws = getClaims(id_token);
 
         // EXP
         Date currentTime = new Date(System.currentTimeMillis());
-        if (!currentTime.before((Date) jws.getBody().get("exp"))) {
-            throw new CustomException(ErrorCode.ID_TOKEN_INVALID);
+        long secs = (currentTime.getTime())/1000;
+        Integer exp = (Integer) jws.get("exp");
+        if (secs>exp) {
+            throw new CustomException(ErrorCode.ID_TOKEN_INVALID_3);
         }
 
         // ISS, AUD
-        if (!ISS.equals(jws.getBody().get("iss")) || !clientId.equals(jws.getBody().get("AUD"))) {
-            throw new CustomException(ErrorCode.ID_TOKEN_INVALID);
+        if (!ISS.equals(String.valueOf(jws.get("iss"))) || !clientId.equals(String.valueOf(jws.get("aud")))) {
+            throw new CustomException(ErrorCode.ID_TOKEN_INVALID_4);
         }
 
-        String sub = String.valueOf(jws.getBody().get("sub")); // user 식별자
-        String email = String.valueOf(jws.getBody().get("email"));
+        String sub = String.valueOf(jws.get("sub")); // user 식별자
+        String email = String.valueOf(jws.get("email"));
 
         // 애플로 로그인 시에 본인 이메일을 hide시킬 수 있는데,
         // 그럴 경우 유저의 email 정보가 'example@privaterelay.appleid.com'와 같이 오게 된다.
-        String email_verified = String.valueOf(jws.getBody().get("email_verified"));
-        String is_private_email = String.valueOf(jws.getBody().get("is_private_email"));
+        String email_verified = String.valueOf(jws.get("email_verified"));
+        String is_private_email = String.valueOf(jws.get("is_private_email"));
 
         // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
         // & 회원가입
