@@ -33,6 +33,12 @@ public class User extends BaseEntity {
     private String image; // Storage에 저장된 이미지 파일 이름
     private String role; // ROLE_USER 혹은 ROLE_ADMIN
 
+    // 추가 정보
+    private Boolean inChallenge=false;
+    private Integer challengeCount;
+    private Integer badgeCount;
+    private Integer winCount;
+
     public void updateUser(UserUpdateRequest request) {
         this.nickname = request.getNickname();
     }

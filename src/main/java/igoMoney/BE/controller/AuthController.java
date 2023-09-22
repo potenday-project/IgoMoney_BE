@@ -91,7 +91,6 @@ public class AuthController {
 
         logger.debug("================================");
         logger.debug("id_token ‣ " + fromAppleService.getId_token());
-        logger.debug("payload ‣ " + appleJwtUtils.decodeFromIdToken(fromAppleService.getId_token()).toString());
         logger.debug("client_secret ‣ " + client_secret);
         logger.debug("================================");
 
