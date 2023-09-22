@@ -38,7 +38,8 @@ public class UserService {
         return response;
     }
 
-    // 닉네임 중복 조회
+
+    // 닉네임 중복확인
     @Transactional(readOnly = true)
     public void checkNicknameDuplicate(String nickname) {
 
@@ -46,6 +47,7 @@ public class UserService {
             throw new CustomException(ErrorCode.EXIST_MEMBER_NICKNAME);
         }
     }
+
 
     // 닉네임 변경하기 (회원가입 시 애플은 빈칸으로 가입됨. 닉네임 설정 후 홈화면 나옴)
     public void updateUser(UserUpdateRequest request) throws IOException {
@@ -58,6 +60,7 @@ public class UserService {
 
         findUser.updateUser(request);
     }
+
 
     // 예외 처리 - 존재하는 user인지
     private User getUserOrThrow(Long userId) {

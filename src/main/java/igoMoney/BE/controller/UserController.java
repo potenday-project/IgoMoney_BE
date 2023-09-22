@@ -31,7 +31,8 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    // 닉네임 중복 조회
+
+    // 닉네임 중복 확인
     @GetMapping("nickname/{nickname}")
     public ResponseEntity<Void> checkNicknameDuplicate(@PathVariable("nickname") String nickname) {
 
@@ -48,4 +49,5 @@ public class UserController {
 
         return new ResponseEntity(HttpStatus.OK);
     }
+
 }
