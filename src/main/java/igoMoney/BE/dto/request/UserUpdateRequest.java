@@ -1,7 +1,7 @@
 package igoMoney.BE.dto.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 public class UserUpdateRequest {
 
+    @NotNull
     private Long id;
     private String nickname;
 //    private MultipartFile image;
