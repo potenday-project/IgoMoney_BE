@@ -15,10 +15,10 @@ public enum ErrorCode {
     // Token 예외
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
-    ID_TOKEN_INVALID_1(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다."),
-    ID_TOKEN_INVALID_2(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다."),
-    ID_TOKEN_INVALID_3(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다."),
-    ID_TOKEN_INVALID_4(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다."),
+    ID_TOKEN_INVALID_1(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다.(토큰 서명 검증 or 구조 문제)"),
+    ID_TOKEN_INVALID_2(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다.(토큰 디코딩 문제)"),
+    ID_TOKEN_INVALID_3(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다.(서명 검증 결과)"),
+    ID_TOKEN_INVALID_4(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다.(서명 검증 결과)"),
     ID_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "ID토큰이 만료되었습니다."),
     AUTH_CODE_INVALID(HttpStatus.UNAUTHORIZED, "Authorization Code가 유효하지 않습니다."),
 
