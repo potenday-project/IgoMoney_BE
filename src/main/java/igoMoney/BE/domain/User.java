@@ -51,4 +51,6 @@ public class User extends BaseEntity {
 
     public void deleteBadge() { this.badgeCount -=1;}
     public void addBadge() { this.badgeCount +=1;}
+    public void addChallengeCount() { this.challengeCount +=1;}
+    public void addWinCount() { this.winCount +=1;}
 }
