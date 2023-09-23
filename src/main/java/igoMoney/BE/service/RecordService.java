@@ -42,6 +42,7 @@ public class RecordService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .image(request.getImage())
+                .cost(request.getCost())
                 .date(LocalDate.now())
                 .build();
         recordRepository.save(record);
@@ -62,6 +63,7 @@ public class RecordService {
                 .userId(record.getUser().getId())
                 .title(record.getTitle())
                 .content(record.getContent())
+                .cost(record.getCost())
                 //.image(imageUrl)
                 .date(record.getDate())
                 .build();
@@ -83,6 +85,7 @@ public class RecordService {
                     .userId(record.getUser().getId())
                     .title(record.getTitle())
                     .content(record.getContent())
+                    .cost(record.getCost())
                     //.image(imageUrl)
                     .date(record.getDate())
                     .build();

@@ -15,5 +15,6 @@ public class RecordResponse {
     private String title;
     private String content;
     private String image;
+    private Integer cost;
     private LocalDate date;
 }

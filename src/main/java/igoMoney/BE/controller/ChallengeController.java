@@ -2,6 +2,7 @@ package igoMoney.BE.controller;
 
 import igoMoney.BE.dto.request.ChallengeCreateRequest;
 import igoMoney.BE.dto.response.ChallengeResponse;
+import igoMoney.BE.dto.response.ChallengeTotalCostResponse;
 import igoMoney.BE.dto.response.IdResponse;
 import igoMoney.BE.service.ChallengeService;
 import jakarta.validation.Valid;
@@ -69,6 +70,12 @@ public class ChallengeController {
         return new ResponseEntity(HttpStatus.OK);
     }
 
-    // 챌린지의 각 사용자 누적금액 조회
+    // 챌린지의 각 사용자별 누적금액 조회
+    @GetMapping("total-cost/{challengeId}")
+    public ResponseEntity<List<ChallengeTotalCostResponse>> getTotalCostPerChallengeUser(@PathVariable Long challengeId) {
 
+        List<ChallengeTotalCostResponse> response = challengeService.getTotalCostPerChallengeUser(challengeId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

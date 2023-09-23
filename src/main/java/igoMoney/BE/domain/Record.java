@@ -30,6 +30,7 @@ public class Record extends BaseEntity {
     private String title;
     @Column(nullable = false)
     private String content;
+    private Integer cost;
     private String image;
     @Column(nullable = false)
     private LocalDate date;
