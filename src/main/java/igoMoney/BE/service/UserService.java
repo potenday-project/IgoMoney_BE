@@ -44,7 +44,7 @@ public class UserService {
     public void checkNicknameDuplicate(String nickname) {
 
         if (userRepository.existsByNickname(nickname)) {
-            throw new CustomException(ErrorCode.EXIST_MEMBER_NICKNAME);
+            throw new CustomException(ErrorCode.EXIST_USER_NICKNAME);
         }
     }
 
@@ -63,7 +63,7 @@ public class UserService {
 
 
     // 예외 처리 - 존재하는 user인지
-    private User getUserOrThrow(Long userId) {
+    public User getUserOrThrow(Long userId) {
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
