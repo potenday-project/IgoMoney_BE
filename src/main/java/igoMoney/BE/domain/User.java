@@ -34,10 +34,14 @@ public class User extends BaseEntity {
     private String role; // ROLE_USER 혹은 ROLE_ADMIN
 
     // 추가 정보
+    @Builder.Default
     private Boolean inChallenge=false;
-    private Integer challengeCount;
-    private Integer badgeCount;
-    private Integer winCount;
+    @Builder.Default
+    private Integer challengeCount=0;
+    @Builder.Default
+    private Integer badgeCount=0;
+    @Builder.Default
+    private Integer winCount=0;
 
     public void updateUser(UserUpdateRequest request) {
         this.nickname = request.getNickname();
