@@ -13,6 +13,7 @@ public enum ErrorCode {
     EXIST_USER_NICKNAME(HttpStatus.CONFLICT, "이미 존재하는 닉네임입니다."),
     EXIST_USER_CHALLENGE(HttpStatus.CONFLICT, "이미 등록한 챌린지가 있거나 진행중인 챌린지가 있습니다."),
     USER_NOT_IN_CHALLENGE(HttpStatus.CONFLICT, "참여중인 챌린지가 없습니다."),
+    PERMISSION_DENIED(HttpStatus.UNAUTHORIZED, "해당 챌린지에 인증글을 올릴 권한이 없습니다"),
 
     // Token 예외
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
@@ -28,8 +29,10 @@ public enum ErrorCode {
     LOGIN_CONNECTION_ERROR(HttpStatus.BAD_REQUEST, "로그인 요청 오류"),
     
     // Challenege 예외
-    NOT_FOUND_CHALLENGE(HttpStatus.NOT_FOUND, "해당 챌린지를 찾을 수 없습니다.");
+    NOT_FOUND_CHALLENGE(HttpStatus.NOT_FOUND, "해당 챌린지를 찾을 수 없습니다."),
 
+    // Record 예외
+    NOT_FOUND_RECORD(HttpStatus.NOT_FOUND, "해당 Record를 찾을 수 없습니다.");
 
 
     private final HttpStatus httpStatus;

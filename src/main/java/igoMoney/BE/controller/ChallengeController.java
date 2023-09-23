@@ -68,4 +68,7 @@ public class ChallengeController {
         challengeService.giveupChallenge(userId, challengeId);
         return new ResponseEntity(HttpStatus.OK);
     }
+
+    // 챌린지의 각 사용자 누적금액 조회
+
 }
