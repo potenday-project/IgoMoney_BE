@@ -6,6 +6,7 @@ import igoMoney.BE.domain.Challenge;
 import igoMoney.BE.domain.Record;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.request.RecordSaveRequest;
+import igoMoney.BE.dto.response.RecordResponse;
 import igoMoney.BE.repository.ChallengeRepository;
 import igoMoney.BE.repository.RecordRepository;
 import igoMoney.BE.repository.UserRepository;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -48,10 +51,47 @@ public class RecordService {
 
 
     // record 1건 조회
+    public RecordResponse getRecord(Long recordId) {
+
+        Record record = getRecordOrThrow(recordId);
+
+//        String imageUrl = imageService.processImage(record.getImage());
+        RecordResponse response = RecordResponse.builder()
+                .recordId(record.getId())
+                .challengeId(record.getChallenge().getId())
+                .userId(record.getUser().getId())
+                .title(record.getTitle())
+                .content(record.getContent())
+                //.image(imageUrl)
+                .date(record.getDate())
+                .build();
+
+        return response;
+    }
 
 
     // 사용자의 그날의 모든 record 조회
+    public List<RecordResponse> getUserDailyRecordList(Long userId, LocalDate date) {
 
+        List<RecordResponse> responseList = new ArrayList<>();
+        List<Record> recordList = recordRepository.findAllByUserIdAndDate(userId, date);
+        for (Record record: recordList){
+//            String image = imageService.processImage(record.getBeforeImage());
+            RecordResponse recordResponse = RecordResponse.builder()
+                    .recordId(record.getId())
+                    .challengeId(record.getChallenge().getId())
+                    .userId(record.getUser().getId())
+                    .title(record.getTitle())
+                    .content(record.getContent())
+                    //.image(imageUrl)
+                    .date(record.getDate())
+                    .build();
+
+            responseList.add(recordResponse);
+        }
+
+        return responseList;
+    }
 
     // 예외 처리 - 존재하는 record 인가
     private Record getRecordOrThrow(Long id) {
