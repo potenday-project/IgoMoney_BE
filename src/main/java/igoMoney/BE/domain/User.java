@@ -4,13 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import igoMoney.BE.common.entity.BaseEntity;
 import igoMoney.BE.dto.request.UserUpdateRequest;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Getter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,7 +23,7 @@ public class User extends BaseEntity {
     private String provider; // 소셜로그인 구분 위함.
 
     // 회원 기본 정보
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
     @Column(unique = true, length = 20)
     private String nickname;
@@ -36,6 +33,7 @@ public class User extends BaseEntity {
     // 추가 정보
     @Builder.Default
     private Boolean inChallenge=false;
+    private Long myChallengeId; // 사용자가 등록 후 대기중인 챌린지 / 참여중인 챌린지
     @Builder.Default
     private Integer challengeCount=0;
     @Builder.Default
@@ -46,4 +44,11 @@ public class User extends BaseEntity {
     public void updateUser(UserUpdateRequest request) {
         this.nickname = request.getNickname();
     }
+    public void updateUser(Boolean inChallenge, Long myChallengeId) {
+        this.inChallenge = inChallenge;
+        this.myChallengeId = myChallengeId;
+    }
+
+    public void deleteBadge() { this.badgeCount -=1;}
+    public void addBadge() { this.badgeCount +=1;}
 }
