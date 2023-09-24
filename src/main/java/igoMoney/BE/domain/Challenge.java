@@ -1,5 +1,6 @@
 package igoMoney.BE.domain;
 
+import igoMoney.BE.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Challenge {
+public class Challenge extends BaseEntity  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +40,10 @@ public class Challenge {
     @Builder.Default
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL)
     private List<ChallengeUser> challengeUsers = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL)
+    private List<Record> records = new ArrayList<>();
 
     // 연관관계 메서드
     public void addChallengeUser(ChallengeUser challengeUser) {

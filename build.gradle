@@ -63,5 +63,6 @@ dependencies {
 
 	implementation 'com.google.code.gson:gson:2.8.7'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.11.238'
 }
 
