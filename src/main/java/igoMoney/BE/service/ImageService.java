@@ -1,23 +1,24 @@
 package igoMoney.BE.service;
-/*
-import com.amazonaws.SdkClientException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.*;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
+
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Utilities;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import software.amazon.awssdk.core.sync.RequestBody;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,132 +27,88 @@ import java.util.UUID;
 @Transactional
 public class ImageService {
 
-    private final String endPoint = "https://kr.object.ncloudstorage.com"; // Naver Object Storage
-    private final String regionName = "kr-standard";
-
-    @Value("${spring.cloud.aws.credentials.accessKey}")
-    private  String accessKey;
-
-    @Value("${spring.cloud.aws.credentials.secretKey}")
-    private  String secretKey;
-
-    @Value("${spring.cloud.aws.s3.bucket}")
-    private String bucketName;
-
-    String objectName = "sample-large-object";
-
-    // S3 client
-    final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
-            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, regionName))
-            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
-            .build();
 
 
-    public String uploadImage(MultipartFile image) throws IOException {
-
-        File file = multipartFileToFile(image);
-        long contentLength = file.length();
-        long partSize = 10 * 1024 * 1024;
-        String uuid = UUID.randomUUID().toString();
-
-        try {
 
 
-            // initialize and get upload ID
-            InitiateMultipartUploadResult initiateMultipartUploadResult = s3.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucketName, objectName));
-            String uploadId = initiateMultipartUploadResult.getUploadId();
+    private final S3Client s3Client;
 
-            // upload parts
-            List<PartETag> partETagList = new ArrayList<PartETag>();
+    // Upload 하고자 하는 버킷의 이름
+    private String bucketName = "igomoney-bucket";
 
-            long fileOffset = 0;
-            for (int i = 1; fileOffset < contentLength; i++) {
-                partSize = Math.min(partSize, (contentLength - fileOffset));
 
-                UploadPartRequest uploadPartRequest = new UploadPartRequest()
-                        .withBucketName(bucketName)
-                        .withKey(uuid)
-                        .withUploadId(uploadId)
-                        .withPartNumber(i)
-                        .withFile(file)
-                        .withFileOffset(fileOffset)
-                        .withPartSize(partSize);
+    public String uploadImage(MultipartFile multipartFile) throws IOException {
+        String key = UUID.randomUUID().toString(); // Storage에 저장될 파일 이름
+        return this.putS3(multipartFile, key);
+    }
 
-                UploadPartResult uploadPartResult = s3.uploadPart(uploadPartRequest);
-                partETagList.add(uploadPartResult.getPartETag());
+    // 파일 업로드를 하기위한 PutObjectRequest를 반환합니다.
+    // 주의 사항은 com.amazonaws Package가 아닌 software.amazon.awssdk를 사용해야 합니다.
+    // key는 저장하고자 하는 파일의 이름(?)을 의미합니다.
+//    private PutObjectRequest getPutObjectRequest(String key) {
+//        return PutObjectRequest.builder()
+//                .bucket(bucketName)
+//                .key(key)
+//                .build();
+//    }
 
-                fileOffset += partSize;
-            }
+    // MultipartFile을 업로드 하기위해 RequestBody.fromInputStream에 InputStream과 file의 Size를 넣어줍니다.
+    private RequestBody getFileRequestBody(MultipartFile file) throws IOException {
+        return RequestBody.fromInputStream(file.getInputStream(), file.getSize());
+    }
 
-            // abort
-            // s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucketName, objectName, uploadId));
+    // S3Utilities를 통해 GetUrlRequest를 파라미터로 넣어 파라미터로 넘어온 key의 접근 경로를 URL로 반환받아 경로를 사용할 수 있다.
+//    private String findUploadKeyUrl (String key) {
+//        S3Utilities s3Utilities = s3Client.utilities();
+//        GetUrlRequest request = GetUrlRequest.builder()
+//                .bucket(bucketName)
+//                .key(key)
+//                .build();
+//
+//        URL url = s3Utilities.getUrl(request);
+//
+//        return url.toString();
+//    }
 
-            // complete
-            CompleteMultipartUploadResult completeMultipartUploadResult = s3.completeMultipartUpload(new CompleteMultipartUploadRequest(bucketName, objectName, uploadId, partETagList));
-        } catch (AmazonS3Exception e) {
-            e.printStackTrace();
-        } catch(SdkClientException e) {
-            e.printStackTrace();
+    // 실제 업로드 하는 메소드
+    private String putS3(MultipartFile file, String key) throws IOException {
+
+        String ext = file.getContentType();
+//        ObjectMetadata metadata = new ObjectMetadata();
+
+//        Map<String, String> metadata = new HashMap<>();
+//        metadata.put("Content-Type", ext);
+//        metadata.put("Content-Type", ext);
+//        metadata.setContentType(ext);
+//        metadata.setContentLength(file.getSize());
+        PutObjectRequest objectRequest =PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .contentType(ext)
+                .contentLength(file.getSize())
+                .build();
+
+        RequestBody rb = getFileRequestBody(file);
+        s3Client.putObject(objectRequest, rb);
+//        s3Client.putObject(new PutObjectRequest(bucketName, key, file.getInputStream(), metadata));
+//        return findUploadKeyUrl(key);
+        return key;
+    }
+
+
+
+    //=========== 파일 다운로드 ===========
+    public String processImage(String image) {
+
+        if (StringUtils.isBlank(image)) {
+            return null;
         }
-        return uuid;
-    }*/
-
-//        public String processImage(String image) {
-//
-//            try {
-//                S3Object s3Object = s3.getObject(bucketName, objectName);
-//                S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-//
-//                OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(downloadFilePath));
-//                byte[] bytesArray = new byte[4096];
-//                int bytesRead = -1;
-//                while ((bytesRead = s3ObjectInputStream.read(bytesArray)) != -1) {
-//                    outputStream.write(bytesArray, 0, bytesRead);
-//                }
-//
-//                outputStream.close();
-//                s3ObjectInputStream.close();
-//                System.out.format("Object %s has been downloaded.\n", objectName);
-//            } catch (AmazonS3Exception e) {
-//                e.printStackTrace();
-//            } catch(SdkClientException e) {
-//                e.printStackTrace();
-//            }
-//        return "https://storage.googleapis.com/" + bucketName + "/" + image;
-//    }
-
-
-//    private final Storage storage;
-//
-//    public String uploadImage(MultipartFile image) throws IOException {
-//
-//        String uuid = UUID.randomUUID().toString(); // Google Cloud Storage에 저장될 파일 이름
-//        String ext = image.getContentType();
-//
-//        BlobInfo blobInfo = storage.create(
-//                BlobInfo.newBuilder(bucketName, uuid)
-//                        .setContentType(ext)
-//                        .build(),
-//                image.getInputStream()
-//        );
-//
-//        return uuid;
-//    }
-//
-//    public String processImage(String image) {
-//
-//        if (StringUtils.isBlank(image)) {
-//            return null;
-//        }
 //        if (image.startsWith("https://")) { // 구글 프로필 이미지 처리
 //            return image;
 //        }
-//        return "https://storage.googleapis.com/" + bucketName + "/" + image;
-//    }
+        System.out.println(">>>>>>>>>> >>>>>>>>>>"+ image);
+        return "https://igomoney-bucket.s3.ap-northeast-2.amazonaws.com/" + image;
+    }
 
-//    public File multipartFileToFile(MultipartFile multipartFile) throws IOException {
-//        File file = new File(multipartFile.getOriginalFilename());
-//        multipartFile.transferTo(file);
-//        return file;
-//    }
-//}
+
+}

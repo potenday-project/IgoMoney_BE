@@ -30,7 +30,7 @@ spring:
         accessKey: ${spring.cloud.aws.credentials.access-key}
         secretKey: ${spring.cloud.aws.credentials.secret-key}
       region:
-        static: kr-standard
+        static: ap-northeast-2
         auto : false
       stack:
         auto : false
