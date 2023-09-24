@@ -22,6 +22,19 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  cloud:
+    aws:
+      s3:
+        bucket: ${spring.cloud.ncp.s3.bucket}
+      credentials:
+        accessKey: ${spring.cloud.aws.credentials.access-key}
+        secretKey: ${spring.cloud.aws.credentials.secret-key}
+      region:
+        static: kr-standard
+        auto : false
+      stack:
+        auto : false
+
 
   security:
     oauth2:

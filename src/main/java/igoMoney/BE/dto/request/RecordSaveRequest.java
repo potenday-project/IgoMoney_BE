@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -21,5 +22,5 @@ public class RecordSaveRequest {
     @Size(max=300)
     private String content;
     private Integer cost;
-    private String image;
+    private MultipartFile image;
 }

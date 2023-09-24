@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,19 +30,22 @@ public class RecordService {
     private final RecordRepository recordRepository;
     private final UserRepository userRepository;
     private final ChallengeRepository challengeRepository;
+//    private final ImageService imageService;
 
     // record 등록하기
-    public Long saveRecord (RecordSaveRequest request) {
+    public Long saveRecord (RecordSaveRequest request) throws IOException {
 
         User findUser = getUserOrThrow(request.getUserId());
         Challenge challenge = getChallengeOrThrow(request.getUserId());
         checkPermission(findUser, request.getChallengeId());
+
+//        String image = imageService.uploadImage(request.getImage());
         Record record = Record.builder()
                 .challenge(challenge)
                 .user(findUser)
                 .title(request.getTitle())
                 .content(request.getContent())
-                .image(request.getImage())
+//                .image(image)
                 .cost(request.getCost())
                 .date(LocalDate.now())
                 .build();
@@ -56,7 +60,7 @@ public class RecordService {
 
         Record record = getRecordOrThrow(recordId);
 
-//        String imageUrl = imageService.processImage(record.getImage());
+        //String imageUrl = imageService.processImage(record.getImage());
         RecordResponse response = RecordResponse.builder()
                 .recordId(record.getId())
                 .challengeId(record.getChallenge().getId())
@@ -64,7 +68,7 @@ public class RecordService {
                 .title(record.getTitle())
                 .content(record.getContent())
                 .cost(record.getCost())
-                //.image(imageUrl)
+//                .image(imageUrl)
                 .date(record.getDate())
                 .build();
 
@@ -78,7 +82,7 @@ public class RecordService {
         List<RecordResponse> responseList = new ArrayList<>();
         List<Record> recordList = recordRepository.findAllByUserIdAndDate(userId, date);
         for (Record record: recordList){
-//            String image = imageService.processImage(record.getBeforeImage());
+//            String image = imageService.processImage(record.getImage());
             RecordResponse recordResponse = RecordResponse.builder()
                     .recordId(record.getId())
                     .challengeId(record.getChallenge().getId())
@@ -86,7 +90,7 @@ public class RecordService {
                     .title(record.getTitle())
                     .content(record.getContent())
                     .cost(record.getCost())
-                    //.image(imageUrl)
+//                    .image(image)
                     .date(record.getDate())
                     .build();
 
