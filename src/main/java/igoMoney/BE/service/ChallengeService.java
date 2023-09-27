@@ -4,6 +4,7 @@ import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
 import igoMoney.BE.domain.Challenge;
 import igoMoney.BE.domain.ChallengeUser;
+import igoMoney.BE.domain.Notification;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.request.ChallengeCreateRequest;
 import igoMoney.BE.dto.response.ChallengeResponse;
@@ -124,6 +125,13 @@ public class ChallengeService {
         findChallenge.addChallengeUser(challengeUser); // 연관관계 설정
 
         // 상대방에게 챌린지 참가 신청 알림 보내기
+        User user2 = getChallengeOtherUser(challengeId, userId);
+        Notification notification = Notification.builder()
+                .user(user2)
+                .title("챌린지 참가자 모집 완료!")
+                .message("내일부터 챌린지가 시작됩니다.")
+                .build();
+
     }
 
     // 챌린지 포기하기
@@ -150,6 +158,11 @@ public class ChallengeService {
 
 
         // 상대방에게 챌린지 중단 알림 보내기
+        Notification notification = Notification.builder()
+                .user(user2)
+                .title("챌린지 중단 알림!")
+                .message("상대방이 챌린지를 포기했어요.")
+                .build();
     }
 
 

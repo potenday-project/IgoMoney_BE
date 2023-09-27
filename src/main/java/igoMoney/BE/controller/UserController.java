@@ -1,6 +1,8 @@
 package igoMoney.BE.controller;
 
 import igoMoney.BE.dto.request.UserUpdateRequest;
+import igoMoney.BE.dto.response.NotificationResponse;
+import igoMoney.BE.dto.response.RecordResponse;
 import igoMoney.BE.dto.response.UserResponse;
 import igoMoney.BE.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -48,4 +51,21 @@ public class UserController {
         return new ResponseEntity(HttpStatus.OK);
     }
 
+    // 확인 안한 알림 목록 조회
+    @GetMapping("notification/{userId}/")
+    public ResponseEntity<List<NotificationResponse>> getUncheckedNotificationList(@PathVariable("userId") Long userId){
+
+        List<NotificationResponse> response = userService.getUncheckedNotificationList(userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    // 알림 확인 체크
+    @PostMapping("notification/check/{notificationId}/")
+    public ResponseEntity<Void> checkNotificationToRead(@PathVariable("notificationId") Long notificationId){
+
+        userService.checkNotificationToRead(notificationId);
+
+        return new ResponseEntity(HttpStatus.OK);
+    }
 }
