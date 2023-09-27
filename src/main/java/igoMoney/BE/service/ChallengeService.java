@@ -9,10 +9,7 @@ import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.request.ChallengeCreateRequest;
 import igoMoney.BE.dto.response.ChallengeResponse;
 import igoMoney.BE.dto.response.ChallengeTotalCostResponse;
-import igoMoney.BE.repository.ChallengeRepository;
-import igoMoney.BE.repository.ChallengeUserRepository;
-import igoMoney.BE.repository.RecordRepository;
-import igoMoney.BE.repository.UserRepository;
+import igoMoney.BE.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +29,7 @@ public class ChallengeService {
     private final UserRepository userRepository;
     private final RecordRepository recordRepository;
     private final ChallengeUserRepository challengeUserRepository;
+    private final NotificationRepository notificationRepository;
 
     // 시작 안 한 챌린지 목록 조회
     public List<ChallengeResponse> getNotStartedChallengeList() {
@@ -131,6 +129,7 @@ public class ChallengeService {
                 .title("챌린지 참가자 모집 완료!")
                 .message("내일부터 챌린지가 시작됩니다.")
                 .build();
+        notificationRepository.save(notification);
 
     }
 
@@ -163,6 +162,7 @@ public class ChallengeService {
                 .title("챌린지 중단 알림!")
                 .message("상대방이 챌린지를 포기했어요.")
                 .build();
+        notificationRepository.save(notification);
     }
 
 
