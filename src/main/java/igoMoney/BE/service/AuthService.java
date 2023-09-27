@@ -39,7 +39,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     // 애플 회원가입
-    public void AppleSignUp(String sub, String email) {
+    public Long AppleSignUp(String sub, String email) {
 
         // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
         User findUser = userRepository.findByEmailAndProvider(email, "apple");
@@ -54,8 +54,10 @@ public class AuthService {
                     .role("ROLE_USER")
                     .build();
 
-            findUser = userRepository.save(user);
+            userRepository.save(user);
+            return user.getId();
         }
+        return findUser.getId();
     }
 
     // 카카오
