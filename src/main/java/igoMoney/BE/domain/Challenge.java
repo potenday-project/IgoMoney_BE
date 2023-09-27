@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -21,7 +21,7 @@ public class Challenge extends BaseEntity  {
     private Long id;
 
     private Long leaderId;
-    private Long winnerId;
+    private Long winnerId; // 동점이면 -1 저장
     private Long recordId;
 
     @Column(nullable = false)
@@ -63,4 +63,6 @@ public class Challenge extends BaseEntity  {
 
     public void startChallenge() { this.startDate = LocalDate.now().plusDays(1); this.status = "inProgress";}
     public void stopChallenge() { this.endDate = LocalDate.now(); this.status = "cancel";}
+    public void finishChallenge() { this.endDate = LocalDate.now().plusDays(-1); this.status = "done";}
+    public void setWinner(Long userId) { this.winnerId = userId;}
 }
