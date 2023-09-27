@@ -9,4 +9,5 @@ import java.util.List;
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     List<Challenge> findAllByStartDateIsNull();
+    List<Challenge> findAllByStatus(String status);
 }

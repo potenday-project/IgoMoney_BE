@@ -12,10 +12,12 @@ import igoMoney.BE.dto.response.ChallengeTotalCostResponse;
 import igoMoney.BE.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,8 +128,8 @@ public class ChallengeService {
         User user2 = getChallengeOtherUser(challengeId, userId);
         Notification notification = Notification.builder()
                 .user(user2)
-                .title("챌린지 참가자 모집 완료!")
-                .message("내일부터 챌린지가 시작됩니다.")
+                .title("내일부터"+findUser.getNickname()+"님과 챌린지 시작")
+                .message(findChallenge.getTitle())
                 .build();
         notificationRepository.save(notification);
 
@@ -154,13 +156,14 @@ public class ChallengeService {
         user2.updateUser(false, null); // 상대방 챌린지 상태 변경
         user2.addBadge();
         user2.addWinCount();
+        findChallenge.setWinner(user2.getId());
 
 
         // 상대방에게 챌린지 중단 알림 보내기
         Notification notification = Notification.builder()
                 .user(user2)
-                .title("챌린지 중단 알림!")
-                .message("상대방이 챌린지를 포기했어요.")
+                .title(findUser.getNickname() + "님과의 챌린지 중단")
+                .message("상대방 "+ findUser.getNickname() +"님이 챌린지를 포기했어요.")
                 .build();
         notificationRepository.save(notification);
     }
@@ -181,6 +184,77 @@ public class ChallengeService {
         }
 
         return responseList;
+    }
+
+    // 챌린지 완료 (마지막날까지 성공)
+    @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    public void finishChallenge() {
+
+        List<Challenge> challengeList = challengeRepository.findAllByStatus("inProgress");
+        Integer minCost = 99999999;
+        Long winnerId = null;
+        Boolean check =false;
+        Integer tempCost = 99999999;
+        for (Challenge c : challengeList) {
+            if (c.getStartDate().plusDays(10).equals(LocalDate.now())){
+                // Challenge : 챌린지 종료 설정
+                c.finishChallenge();
+
+                // 챌린지 승자 결정
+                List<Object[]> totalCosts =  recordRepository.calculateTotalCostByUserId(c.getId());
+                for (Object[] obj: totalCosts){
+                    if(((BigDecimal) obj[1]).intValue() == minCost){
+                        check = true;
+                        tempCost = minCost;
+                    }
+                    else if (((BigDecimal) obj[1]).intValue() < minCost){
+                        minCost = ((BigDecimal) obj[1]).intValue();
+                        winnerId = (Long) obj[0];
+                    }
+                }
+                // 동점자 처리
+                List<User> userList = getAllChallengeUser(c.getId());
+                User findWinner = getUserOrThrow(winnerId);
+                if (tempCost == minCost){
+                    c.setWinner(-1L);
+                    for (User u : userList) {
+                        u.addBadge();
+                        u.addWinCount();
+                    }
+                } else {
+                    c.setWinner(winnerId);
+                    findWinner.addBadge();
+                    findWinner.addWinCount();
+                }
+
+                // 챌린지 완료 알림
+                User lose = getChallengeOtherUser(c.getId(), winnerId);
+                for(User u : userList) {
+                    // 유저 : 챌린지 종료로 설정
+                    u.updateUser(false, null);
+
+                    if (u.getId().equals(winnerId)) {
+                        // 챌린지 승리자
+                        Notification notification = Notification.builder()
+                                .user(u)
+                                .title(lose.getNickname()+"님과의 챌린지 완료")
+                                .message(u.getNickname()+"님! 챌린지에서 승리하셨어요 \uD83E\uDD47") // 🥇
+                                .build();
+                        notificationRepository.save(notification);
+                    } else{
+                        Notification notification = Notification.builder()
+                                .user(u)
+                                .title(findWinner.getNickname()+"님과의 챌린지 완료")
+                                .message(u.getNickname()+"님이 챌린지에서 승리하셨어요 \uD83D\uDE25") //😥
+                                .build();
+                        notificationRepository.save(notification);
+                    }
+
+                }
+            }
+        }
+
+
     }
 
 
