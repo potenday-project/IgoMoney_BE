@@ -9,6 +9,7 @@ import lombok.*;
 @Builder
 public class AppleTokenResponse {
 
+    private Long userId;
     private String access_token;
     private String expires_in;
     private String id_token;

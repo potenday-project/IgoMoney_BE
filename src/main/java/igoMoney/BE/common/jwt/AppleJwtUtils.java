@@ -154,7 +154,7 @@ public class AppleJwtUtils extends JwtUtils {
         return null;
     }
 
-    public AppleTokenResponse requestCodeValidations(String client_secret, String code, String refresh_token) throws IOException {
+    public AppleTokenResponse requestCodeValidations(Long userId, String client_secret, String code, String refresh_token) throws IOException {
 
         // requestCodeValidations
         if (client_secret != null && code != null && refresh_token == null) {
@@ -165,7 +165,7 @@ public class AppleJwtUtils extends JwtUtils {
                     .grant_type("authorization_code")
                     .build();
 
-            return getTokenResponse(request);
+            return getTokenResponse(userId, request);
 
         } else if (client_secret != null && refresh_token != null) { // refresh token 있음
             // validateAnExistingRefreshToken
@@ -176,24 +176,25 @@ public class AppleJwtUtils extends JwtUtils {
                     .refresh_token(refresh_token)
                     .build();
 
-            return getTokenResponse(request);
+            return getTokenResponse(userId, request);
         }
         return null;
     }
 
     // 1) Authorization code로 토큰 발급받기
     // 2) refresh token으로 access token 재발급
-    public AppleTokenResponse getTokenResponse(AppleTokenRequest appleTokenRequest) {
+    public AppleTokenResponse getTokenResponse(Long userId, AppleTokenRequest appleTokenRequest) {
 
         try{
             AppleTokenResponse response = appleClient.getToken(appleTokenRequest);
+            response.setUserId(userId);
             return response;
         } catch (Exception e){
             throw new CustomException(ErrorCode.AUTH_CODE_INVALID);
         }
     }
 
-    public void checkIdToken(String id_token) throws ParseException {
+    public Long checkIdToken(String id_token) throws ParseException {
 
         Claims jws = null;
         jws = getClaims(id_token);
@@ -221,7 +222,8 @@ public class AppleJwtUtils extends JwtUtils {
 
         // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
         // & 회원가입
-        authService.AppleSignUp(sub, email);
+        Long userId = authService.AppleSignUp(sub, email);
+        return userId;
     }
 
     // 애플 로그인 페이지
