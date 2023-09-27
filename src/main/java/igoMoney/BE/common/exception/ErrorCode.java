@@ -32,7 +32,10 @@ public enum ErrorCode {
     NOT_FOUND_CHALLENGE(HttpStatus.NOT_FOUND, "해당 챌린지를 찾을 수 없습니다."),
 
     // Record 예외
-    NOT_FOUND_RECORD(HttpStatus.NOT_FOUND, "해당 Record를 찾을 수 없습니다.");
+    NOT_FOUND_RECORD(HttpStatus.NOT_FOUND, "해당 Record를 찾을 수 없습니다."),
+
+    // Notification 예외
+    NOT_FOUND_NOTIFICATION(HttpStatus.NOT_FOUND, "해당 Notification을 찾을 수 없습니다.");
 
 
     private final HttpStatus httpStatus;
