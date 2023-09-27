@@ -97,10 +97,10 @@ public class AuthController {
         // 4. public key 요청하기 (n, e 값 받고 키 생성)
         // 5. Identity Token (JWT) 검증하기
         // 6. ID토큰 payload 바탕으로 회원가입
-        appleJwtUtils.checkIdToken(fromAppleService.getId_token());
+        Long userId = appleJwtUtils.checkIdToken(fromAppleService.getId_token());
 
         // 7. Authorization Code로 JWT 토큰 발급받기
-        AppleTokenResponse response = appleJwtUtils.requestCodeValidations(client_secret, code, refresh_token);
+        AppleTokenResponse response = appleJwtUtils.requestCodeValidations(userId, client_secret, code, refresh_token);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
