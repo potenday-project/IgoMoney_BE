@@ -136,23 +136,38 @@ public class ChallengeService {
     }
 
     // 챌린지 포기하기
-    public void giveupChallenge(Long userId, Long challengeId) {
+    public void giveupChallenge(Long userId) {
 
         // 포기 가능한 상태인지 확인
         User findUser = getUserOrThrow(userId);
         if (!findUser.getInChallenge()){
             throw new CustomException(ErrorCode.USER_NOT_IN_CHALLENGE);
         }
-        Challenge findChallenge = getChallengeOrThrow(challengeId);
+        cancelChallenge(findUser);
+    }
+
+    // 회원탈퇴시 챌린지 포기 - 에러코드 차이 때문에 별도 메서드로 정의
+    public void giveUpChallengeSignOut(Long userId){
+
+        User findUser = getUserOrThrow(userId);
+        if (!findUser.getInChallenge()){
+            return;
+        }
+        cancelChallenge(findUser);
+    }
+
+    private void cancelChallenge(User user) {
+
+        Challenge findChallenge = getChallengeOrThrow(user.getMyChallengeId());
 
         findChallenge.stopChallenge(); // 챌린지 중단 설정
-        findUser.updateUser(false, null);  // 사용자 챌린지 상태 변경
+        user.updateUser(false, null);  // 사용자 챌린지 상태 변경
 
-        User user2 = getChallengeOtherUser(challengeId, userId);
+        User user2 = getChallengeOtherUser(user.getMyChallengeId(), user.getId());
         if (user2 == null){ return;} // 상대방 없을 때
 
         // 상대방 있을 때
-        findUser.deleteBadge(); // 뱃지 개수 차감하기
+        user.deleteBadge(); // 뱃지 개수 차감하기
         user2.updateUser(false, null); // 상대방 챌린지 상태 변경
         user2.addBadge();
         user2.addWinCount();
@@ -162,16 +177,11 @@ public class ChallengeService {
         // 상대방에게 챌린지 중단 알림 보내기
         Notification notification = Notification.builder()
                 .user(user2)
-                .title(findUser.getNickname() + "님과의 챌린지 중단")
-                .message("상대방 "+ findUser.getNickname() +"님이 챌린지를 포기했어요.")
+                .title(user.getNickname() + "님과의 챌린지 중단")
+                .message("상대방 "+ user.getNickname() +"님이 챌린지를 포기했어요.")
                 .build();
         notificationRepository.save(notification);
     }
-
-    // 사용자의 모든 챌린지 포기
-//    public void giveUpAllChallenge(Long userId){
-//
-//    }
 
     // 챌린지의 각 사용자별 누적금액 조회
     public List<ChallengeTotalCostResponse> getTotalCostPerChallengeUser(Long challengeId) {

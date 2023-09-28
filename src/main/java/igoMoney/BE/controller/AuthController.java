@@ -114,7 +114,7 @@ public class AuthController {
     public ResponseEntity<Void> appleSignOut(@RequestBody AppleSignOutRequest request) throws IOException {
 
         // 챌린지 중단 및 패배처리
-//        challengeService.giveUpAllChallenge(request.getUserId());
+        challengeService.giveUpChallengeSignOut(request.getUserId());
         // User가 작성한 모든 Challenge record 삭제
         recordService.deleteAllUserRecords(request.getUserId());
 
