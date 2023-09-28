@@ -1,8 +1,11 @@
 package igoMoney.BE.service;
 
+import igoMoney.BE.common.config.AppleClient;
 import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
+import igoMoney.BE.common.jwt.AppleJwtUtils;
 import igoMoney.BE.common.jwt.JwtUtils;
+import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
 import igoMoney.BE.domain.RefreshToken;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
@@ -22,6 +25,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.IOException;
+import java.util.List;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -36,21 +40,23 @@ public class AuthService {
     //private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
+    private final AppleJwtUtils appleJwtUtils;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AppleClient appleClient;
 
     // 애플 회원가입
-    public Long AppleSignUp(String sub, String email) {
+    public Long AppleSignUp(List<String> subNemail) {
 
         // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
-        User findUser = userRepository.findByEmailAndProvider(email, "apple");
+        User findUser = userRepository.findByEmailAndProvider(subNemail.get(1), "apple");
 
         // DB에 사용자가 없다면, 애플 로그인을 처음 한 사용자이니, DB에 사용자 정보를 저장(회원가입 시켜줌)
         if (findUser == null) {
 
             User user = User.builder()
                     .provider("apple")
-                    .loginId(sub) // ID 토큰의 sub
-                    .email(email)
+                    .loginId(subNemail.get(0)) // ID 토큰의 sub
+                    .email(subNemail.get(1))
                     .role("ROLE_USER")
                     .build();
 
@@ -235,7 +241,18 @@ public class AuthService {
         return response;
     }
 
+    // 애플 회원탈퇴
+    public void appleSignOut(AppleSignOutRequest request) throws IOException {
 
+        // 애플 연동해제
+        request.setClient_id(appleJwtUtils.getClientId());
+        request.setClient_secret(appleJwtUtils.makeClientSecret());
+        appleClient.signOut(request);
+
+        // User 정보 삭제
+        User findUser = getUserOrThrow(request.getUserId());
+        userRepository.delete(findUser);
+    }
 
     // 로그아웃
 //    public void logout(String request) {
@@ -247,4 +264,10 @@ public class AuthService {
 //                .set(accessToken, "blackList", expiration, TimeUnit.MILLISECONDS);
 //    }
 
+    // 예외 처리 - 존재하는 user인지
+    public User getUserOrThrow(Long userId) {
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+    }
 }

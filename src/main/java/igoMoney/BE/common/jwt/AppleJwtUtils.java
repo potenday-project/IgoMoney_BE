@@ -37,17 +37,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
 public class AppleJwtUtils extends JwtUtils {
 
     private final AppleClient appleClient;
-    private final AuthService authService;
 
     private String ISS = "https://appleid.apple.com";
 
@@ -194,7 +190,7 @@ public class AppleJwtUtils extends JwtUtils {
         }
     }
 
-    public Long checkIdToken(String id_token) throws ParseException {
+    public List<String> checkIdToken(String id_token) throws ParseException {
 
         Claims jws = null;
         jws = getClaims(id_token);
@@ -220,10 +216,11 @@ public class AppleJwtUtils extends JwtUtils {
         String email_verified = String.valueOf(jws.get("email_verified"));
         String is_private_email = String.valueOf(jws.get("is_private_email"));
 
-        // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
-        // & 회원가입
-        Long userId = authService.AppleSignUp(sub, email);
-        return userId;
+        // 회원가입에 필요한 sub, email 넘기기
+        List<String> subNemail = new ArrayList<String>();
+        subNemail.add(sub);
+        subNemail.add(email);
+        return subNemail;
     }
 
     // 애플 로그인 페이지
@@ -238,4 +235,7 @@ public class AppleJwtUtils extends JwtUtils {
         return metaInfo;
     }
 
+    public String getClientId() {
+        return clientId;
+    }
 }

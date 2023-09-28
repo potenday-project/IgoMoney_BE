@@ -1,5 +1,6 @@
 package igoMoney.BE.common.config;
 
+import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
 import igoMoney.BE.common.jwt.dto.AppleTokenRequest;
 import igoMoney.BE.common.jwt.dto.AppleTokenResponse;
 import igoMoney.BE.common.jwt.dto.ApplePublicKeyResponse;
@@ -14,4 +15,7 @@ public interface AppleClient {
 
     @PostMapping(value = "/token", consumes = "application/x-www-form-urlencoded")
     AppleTokenResponse getToken(AppleTokenRequest request);
+
+    @PostMapping(value = "/revoke", consumes = "application/x-www-form-urlencoded")
+    AppleTokenResponse signOut(AppleSignOutRequest request); // client_id, client_secret, token, token_type_hint (refresh_token,access_token)
 }

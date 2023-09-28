@@ -63,10 +63,10 @@ public class ChallengeController {
     }
 
     // 챌린지 포기하기
-    @PostMapping("giveup/{challengeId}/{userId}")
-    public ResponseEntity<Void> giveupChallenge(@PathVariable Long userId, @PathVariable Long challengeId) {
+    @PostMapping("giveup/{userId}")
+    public ResponseEntity<Void> giveupChallenge(@PathVariable Long userId) {
 
-        challengeService.giveupChallenge(userId, challengeId);
+        challengeService.giveupChallenge(userId);
         return new ResponseEntity(HttpStatus.OK);
     }
 

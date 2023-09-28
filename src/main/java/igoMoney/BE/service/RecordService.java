@@ -100,6 +100,15 @@ public class RecordService {
         return responseList;
     }
 
+    // 사용자의 모든 record 삭제 (회원탈퇴 시)
+    public void deleteAllUserRecords(Long userId) {
+
+        List<Record> recordList = recordRepository.findAllByUserId(userId);
+        for(Record r : recordList){
+            recordRepository.delete(r);
+        }
+    }
+
     // 예외 처리 - 존재하는 record 인가
     private Record getRecordOrThrow(Long id) {
 

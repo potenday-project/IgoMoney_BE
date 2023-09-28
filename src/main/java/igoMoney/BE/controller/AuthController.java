@@ -3,17 +3,15 @@ package igoMoney.BE.controller;
 import igoMoney.BE.common.jwt.AppleJwtUtils;
 //import igoMoney.BE.common.jwt.JwtAuthorizationFilter;
 //import igoMoney.BE.common.jwt.dto.AppleTokenRequest;
+import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
 import igoMoney.BE.common.jwt.dto.AppleTokenResponse;
-import igoMoney.BE.common.jwt.dto.TokenDto;
+import igoMoney.BE.service.RecordService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import igoMoney.BE.dto.request.AuthKakaoLoginRequest;
 import igoMoney.BE.dto.request.FromAppleService;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
-import igoMoney.BE.dto.response.AuthTokenResponse;
-import igoMoney.BE.dto.response.IdResponse;
-import igoMoney.BE.dto.response.UserResponse;
 import igoMoney.BE.service.AuthService;
+import igoMoney.BE.service.ChallengeService;
 //import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +27,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -38,6 +37,8 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final ChallengeService challengeService;
+    private final RecordService recordService;
     private final AppleJwtUtils appleJwtUtils;
     //private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -97,7 +98,9 @@ public class AuthController {
         // 4. public key 요청하기 (n, e 값 받고 키 생성)
         // 5. Identity Token (JWT) 검증하기
         // 6. ID토큰 payload 바탕으로 회원가입
-        Long userId = appleJwtUtils.checkIdToken(fromAppleService.getId_token());
+        List<String> subNemail = appleJwtUtils.checkIdToken(fromAppleService.getId_token());
+        // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회 & 회원가입
+        Long userId = authService.AppleSignUp(subNemail); // sub, email
 
         // 7. Authorization Code로 JWT 토큰 발급받기
         AppleTokenResponse response = appleJwtUtils.requestCodeValidations(userId, client_secret, code, refresh_token);
@@ -106,7 +109,20 @@ public class AuthController {
     }
 
     // [애플]  회원탈퇴
+    @PostMapping("signout/apple")
+    @ResponseBody
+    public ResponseEntity<Void> appleSignOut(@RequestBody AppleSignOutRequest request) throws IOException {
 
+        // 챌린지 중단 및 패배처리
+        challengeService.giveUpChallengeSignOut(request.getUserId());
+        // User가 작성한 모든 Challenge record 삭제
+        recordService.deleteAllUserRecords(request.getUserId());
+
+        // 애플 연동해제 및 회원정보(User) 삭제
+        authService.appleSignOut(request);
+
+        return new ResponseEntity(HttpStatus.OK);
+    }
 
     // [카카오] refresh token으로 accessToken 재발급
     @PostMapping("token")
