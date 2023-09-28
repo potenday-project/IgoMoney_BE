@@ -3,6 +3,7 @@ package igoMoney.BE.controller;
 import igoMoney.BE.common.jwt.AppleJwtUtils;
 //import igoMoney.BE.common.jwt.JwtAuthorizationFilter;
 //import igoMoney.BE.common.jwt.dto.AppleTokenRequest;
+import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
 import igoMoney.BE.common.jwt.dto.AppleTokenResponse;
 import igoMoney.BE.common.jwt.dto.TokenDto;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -97,7 +99,9 @@ public class AuthController {
         // 4. public key 요청하기 (n, e 값 받고 키 생성)
         // 5. Identity Token (JWT) 검증하기
         // 6. ID토큰 payload 바탕으로 회원가입
-        Long userId = appleJwtUtils.checkIdToken(fromAppleService.getId_token());
+        List<String> subNemail = appleJwtUtils.checkIdToken(fromAppleService.getId_token());
+        // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회 & 회원가입
+        Long userId = authService.AppleSignUp(subNemail); // sub, email
 
         // 7. Authorization Code로 JWT 토큰 발급받기
         AppleTokenResponse response = appleJwtUtils.requestCodeValidations(userId, client_secret, code, refresh_token);
@@ -106,7 +110,14 @@ public class AuthController {
     }
 
     // [애플]  회원탈퇴
+    @PostMapping("signout/apple")
+    @ResponseBody
+    public ResponseEntity<Void> appleSignOut(@RequestBody AppleSignOutRequest request) throws IOException {
 
+        authService.appleSignOut(request);
+
+        return new ResponseEntity(HttpStatus.OK);
+    }
 
     // [카카오] refresh token으로 accessToken 재발급
     @PostMapping("token")
