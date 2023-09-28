@@ -168,6 +168,10 @@ public class ChallengeService {
         notificationRepository.save(notification);
     }
 
+    // 사용자의 모든 챌린지 포기
+//    public void giveUpAllChallenge(Long userId){
+//
+//    }
 
     // 챌린지의 각 사용자별 누적금액 조회
     public List<ChallengeTotalCostResponse> getTotalCostPerChallengeUser(Long challengeId) {

@@ -14,4 +14,5 @@ public interface RecordRepository extends JpaRepository<Record, Long> {
     @Query(value="SELECT r.user_id, SUM(r.cost) FROM record r WHERE r.challenge_id= :challengeId GROUP BY r.user_id", nativeQuery = true)
     List<Object[]> calculateTotalCostByUserId(@Param("challengeId") Long challengeId);
 
+    List<Record> findAllByUserId(Long userId);
 }
