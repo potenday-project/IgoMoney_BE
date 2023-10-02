@@ -54,7 +54,7 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: root
-        key: ${{ secrets.KEY }}
+        #key: ${{ secrets.KEY }}
         password: ${{ secrets.PASSWORD }}
         script: |
           sudo docker rm -f $(docker ps -qa)
