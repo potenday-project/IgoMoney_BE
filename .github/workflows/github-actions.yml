@@ -45,7 +45,7 @@ jobs:
     - name: web docker build and push
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker build -t ${{ secrets.DOCKER_REPO }}/igomoney-app .
+        docker build  -f DockerFile -t ${{ secrets.DOCKER_REPO }}/igomoney-app .
         docker push ${{ secrets.DOCKER_REPO }}/igomoney-app
 
     # docker compose up
