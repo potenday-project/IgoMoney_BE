@@ -38,7 +38,9 @@ jobs:
       shell: bash
         
     - name: Build with Gradle
-      run: ./gradlew bootJar
+      run: |
+        chmod +x ./gradlew
+        ./gradlew bootJar
 
     - name: web docker build and push
       run: |
