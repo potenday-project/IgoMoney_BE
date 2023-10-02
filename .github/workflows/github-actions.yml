@@ -50,11 +50,12 @@ jobs:
 
     # docker compose up
     - name: executing remote ssh commands using password
-      uses: fifsky/ssh-action@master
+      uses: appleboy/ssh-action@v0.1.4
       with:
         host: ${{ secrets.HOST }}
         user: root
         key: ${{ secrets.KEY }}
+        password: ${{ secrets.PASSWORD }}
         command: |
           sudo docker rm -f $(docker ps -qa)
           sudo docker pull ${{ secrets.DOCKER_REPO }}/igomoney-app
