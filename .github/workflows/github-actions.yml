@@ -53,7 +53,7 @@ jobs:
       uses: fifsky/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
-        username: ubuntu
+        user: root
         key: ${{ secrets.KEY }}
         command: |
           sudo docker rm -f $(docker ps -qa)
