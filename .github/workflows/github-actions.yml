@@ -53,9 +53,10 @@ jobs:
       uses: appleboy/ssh-action@v0.1.4
       with:
         host: ${{ secrets.HOST }}
-        username: root
+        username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
         #password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
         script: |
           sudo docker rm -f $(docker ps -qa)
           sudo docker pull ${{ secrets.DOCKER_REPO }}/igomoney-app
