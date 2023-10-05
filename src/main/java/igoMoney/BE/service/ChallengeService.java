@@ -61,10 +61,18 @@ public class ChallengeService {
         }
         Challenge challenge = challengeRepository.findById(findUser.getMyChallengeId())
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_CHALLENGE));
+        User user2 = getChallengeOtherUser(challenge.getId(), userId);
+        Long user2Id;
+        if(user2 == null) {
+            user2Id = null;
+        } else{
+            user2Id = user2.getId();
+        }
 
         ChallengeResponse response = ChallengeResponse.builder()
                 .id(challenge.getId())
                 .leaderId(challenge.getLeaderId())
+                .competitorId(user2Id)
                 .title(challenge.getTitle())
                 .content(challenge.getContent())
                 .targetAmount(challenge.getTargetAmount())

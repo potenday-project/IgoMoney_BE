@@ -1,6 +1,5 @@
 package igoMoney.BE.dto.response;
 
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -15,6 +14,7 @@ public class ChallengeResponse {
     private Long id;
     private Long leaderId;
     private Long winnerId;
+    private Long competitorId; // 상대방 ID
     private Long recordId;
     private String title;
     private String content;
