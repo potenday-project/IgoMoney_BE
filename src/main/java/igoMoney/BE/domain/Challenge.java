@@ -22,7 +22,6 @@ public class Challenge extends BaseEntity  {
 
     private Long leaderId;
     private Long winnerId; // 동점이면 -1 저장
-    private Long recordId;
 
     @Column(nullable = false)
     private String title;
@@ -30,9 +29,10 @@ public class Challenge extends BaseEntity  {
     private String content;
     @Column(nullable = false)
     private Integer targetAmount;
+    private Integer categoryId; // 생활비1, 식비2, 교통비3, 쇼핑 비용4, 취미 비용5
     private LocalDate startDate;
     @Builder.Default
-    private Integer term=10; // days
+    private Integer term=7; // days
     private LocalDate endDate;
     @Builder.Default
     private String status="notStarted"; // notStarted/inProgress/cancel/done
