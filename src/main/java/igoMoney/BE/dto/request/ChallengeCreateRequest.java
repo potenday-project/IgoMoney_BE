@@ -4,6 +4,8 @@ import lombok.*;
 
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,4 +19,6 @@ public class ChallengeCreateRequest {
     @Size(max=300)
     private String content;
     private Integer targetAmount;
+    private Integer categoryId;
+    private LocalDate startDate;
 }

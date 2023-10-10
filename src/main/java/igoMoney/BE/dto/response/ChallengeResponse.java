@@ -19,6 +19,7 @@ public class ChallengeResponse {
     private String title;
     private String content;
     private Integer targetAmount;
+    private Integer categoryId;
     private LocalDate startDate;
     private Integer term;
     private LocalDate endDate;

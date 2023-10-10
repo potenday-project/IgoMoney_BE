@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class ChallengeService {
     private final RecordRepository recordRepository;
     private final ChallengeUserRepository challengeUserRepository;
     private final NotificationRepository notificationRepository;
+    DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM월 dd일");
 
     // 시작 안 한 챌린지 목록 조회
     public List<ChallengeResponse> getNotStartedChallengeList() {
@@ -75,6 +77,7 @@ public class ChallengeService {
                 .competitorId(user2Id)
                 .title(challenge.getTitle())
                 .content(challenge.getContent())
+                .categoryId(challenge.getCategoryId())
                 .targetAmount(challenge.getTargetAmount())
                 .build();
 
@@ -94,6 +97,8 @@ public class ChallengeService {
                 .leaderId(request.getUserId())
                 .title(request.getTitle())
                 .content(request.getContent())
+                .categoryId(request.getCategoryId())
+                .startDate(request.getStartDate())
                 .targetAmount(request.getTargetAmount())
                 .build();
 
@@ -121,7 +126,6 @@ public class ChallengeService {
             throw new CustomException(ErrorCode.EXIST_USER_CHALLENGE);
         }
         Challenge findChallenge = getChallengeOrThrow(challengeId);
-        findChallenge.startChallenge(); // 챌린지 다음날부터 시작하는 것으로 설정
         findUser.updateUser(true, challengeId); // 챌린지 참여 정보 업데이트
         findUser.addChallengeCount();
 
@@ -136,8 +140,8 @@ public class ChallengeService {
         User user2 = getChallengeOtherUser(challengeId, userId);
         Notification notification = Notification.builder()
                 .user(user2)
-                .title("내일부터"+findUser.getNickname()+"님과 챌린지 시작")
-                .message(findChallenge.getTitle())
+                .title("챌린지 현황")
+                .message(findChallenge.getStartDate().format(dateFormat)+"부터 "+findUser.getNickname()+"님과 챌린지 시작")
                 .build();
         notificationRepository.save(notification);
 
@@ -218,7 +222,7 @@ public class ChallengeService {
         Boolean check =false;
         Integer tempCost = 99999999;
         for (Challenge c : challengeList) {
-            if (c.getStartDate().plusDays(10).equals(LocalDate.now())){
+            if (c.getStartDate().plusDays(7).equals(LocalDate.now())){
                 // Challenge : 챌린지 종료 설정
                 c.finishChallenge();
 
