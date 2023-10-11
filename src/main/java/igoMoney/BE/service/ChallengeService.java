@@ -39,7 +39,7 @@ public class ChallengeService {
     public List<ChallengeResponse> getNotStartedChallengeList() {
 
         List<ChallengeResponse> responseList = new ArrayList<>();
-        List<Challenge> challengeList = challengeRepository.findAllByStartDateIsNull();
+        List<Challenge> challengeList = challengeRepository.findAllByStartDateIsAfter(LocalDate.now());
         for (Challenge challenge: challengeList){
             ChallengeResponse challengeResponse = ChallengeResponse.builder()
                     .id(challenge.getId())
