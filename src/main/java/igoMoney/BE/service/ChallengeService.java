@@ -47,6 +47,9 @@ public class ChallengeService {
                     .title(challenge.getTitle())
                     .content(challenge.getContent())
                     .targetAmount(challenge.getTargetAmount())
+                    .startDate(challenge.getStartDate())
+                    .categoryId(challenge.getCategoryId())
+                    .term(challenge.getTerm())
                     .build();
             responseList.add(challengeResponse);
         }
@@ -79,6 +82,8 @@ public class ChallengeService {
                 .content(challenge.getContent())
                 .categoryId(challenge.getCategoryId())
                 .targetAmount(challenge.getTargetAmount())
+                .startDate(challenge.getStartDate())
+                .term(challenge.getTerm())
                 .build();
 
         return response;
