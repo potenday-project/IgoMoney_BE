@@ -1,34 +1,29 @@
 package igoMoney.BE.service;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import igoMoney.BE.common.config.AppleClient;
 import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
 import igoMoney.BE.common.jwt.AppleJwtUtils;
 import igoMoney.BE.common.jwt.JwtUtils;
 import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
+import igoMoney.BE.common.jwt.dto.TokenDto;
 import igoMoney.BE.domain.RefreshToken;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
-import igoMoney.BE.dto.response.UserResponse;
-import igoMoney.BE.repository.UserRepository;
 import igoMoney.BE.repository.RefreshTokenRepository;
+import igoMoney.BE.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-//import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.io.IOException;
 import java.util.List;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 @Service
 @RequiredArgsConstructor
@@ -44,8 +39,13 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final AppleClient appleClient;
 
+    @Value("${spring.security.oauth2.client.registeration.kakao.client-id}")
+    private String kakaoClientId;
+    @Value("${spring.security.oauth2.client.registeration.kakao.client-secret}")
+    private String kakaoClientSecret;
+
     // 애플 회원가입
-    public Long AppleSignUp(List<String> subNemail) {
+    public TokenDto AppleSignUp(List<String> subNemail) {
 
         // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
         User findUser = userRepository.findByEmailAndProvider(subNemail.get(1), "apple");
@@ -61,13 +61,13 @@ public class AuthService {
                     .build();
 
             userRepository.save(user);
-            return user.getId();
+            findUser = user;
         }
-        return findUser.getId();
+        return jwtUtils.createToken(findUser);// Save User token
     }
 
-    // 카카오
-    public String getAccessToken (String authorize_code) {
+    // 카카오 - 백엔드 test용
+    public String kakaoGetAccessToken (String authorize_code) {
         String access_Token = "";
         String refresh_Token = "";
         String reqURL = "https://kauth.kakao.com/oauth/token";
@@ -79,13 +79,15 @@ public class AuthService {
             //    POST 요청을 위해 기본값이 false인 setDoOutput을 true로
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
+            conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
             //    POST 요청에 필요로 요구하는 파라미터 스트림을 통해 전송
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()));
             StringBuilder sb = new StringBuilder();
             sb.append("grant_type=authorization_code");
-            sb.append("&client_id=b5f85af25d1bdf961d4f2016bafe3c6e");
-            sb.append("&redirect_uri=http://localhost:8000/login");
+            sb.append("&client_id="+kakaoClientId);
+            sb.append("&client_secret="+kakaoClientSecret);
+            sb.append("&redirect_uri=http://localhost:8080/auth/login/kakao/redirect");
             sb.append("&code=" + authorize_code);
             bw.write(sb.toString());
             bw.flush();
@@ -117,7 +119,6 @@ public class AuthService {
             br.close();
             bw.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -126,7 +127,7 @@ public class AuthService {
 
 
     // 카카오 로그인 & 회원가입
-    public UserResponse kakaoLogin(String accessToken) throws IOException {
+    public TokenDto kakaoLogin(String accessToken) throws IOException {
 
         String reqURL = "https://kapi.kakao.com/v2/user/me";
 
@@ -157,23 +158,18 @@ public class AuthService {
             JsonParser parser = new JsonParser();
             JsonElement element = parser.parse(result);
 
-            int id = element.getAsJsonObject().get("id").getAsInt();
-            boolean hasEmail = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("has_email").getAsBoolean();
-            boolean hasProfile = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("has_profile").getAsBoolean();
+            int id = element.getAsJsonObject().get("id").getAsInt(); // 카카오 회원번호
             String email = "";
             String image = "";
-            String nickname = "";
-            if(hasEmail){
-                email = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("email").getAsString();
-            }
-            if(hasProfile){
-                image = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("profile").getAsJsonObject().get("profile_image_url").getAsString();
-                nickname = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("profile").getAsJsonObject().get("nickname").getAsString();
-            }
+            //String nickname = "";
+            email = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("email").getAsString();
+            image = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("profile").getAsJsonObject().get("profile_image_url").getAsString();
+            //nickname = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("profile").getAsJsonObject().get("nickname").getAsString();
+
             System.out.println("id : " + id);
             System.out.println("email : " + email);
             System.out.println("image : " + image);
-            System.out.println("nickname : " + nickname);
+            //System.out.println("nickname : " + nickname);
             br.close();
 
             // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회
@@ -186,21 +182,14 @@ public class AuthService {
                         .provider("kakao")
                         .email(email)
                         .image(image)
-                        .nickname(nickname)
+                        //.nickname(nickname)
                         .role("ROLE_USER")
                         .build();
 
-                findUser = userRepository.save(user);
+                userRepository.save(user);
+                findUser = user;
             }
-            UserResponse response = UserResponse.builder()
-                    .id(findUser.getId())
-                    .email(findUser.getEmail())
-                    .image(findUser.getImage())
-                    .nickname(findUser.getNickname())
-                    .role(findUser.getRole())
-                    .provider(findUser.getProvider())
-                    .build();
-            return response;
+            return jwtUtils.createToken(findUser);// Save User token
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -211,27 +200,22 @@ public class AuthService {
 
 
 
-    // [카카오] accessToken 재발급
-    public AuthRecreateTokenResponse refresh(String request) {
+    // accessToken 재발급
+    public AuthRecreateTokenResponse refreshToken(String refresh) {
 
-        String refreshToken = request.replace("Bearer ", "");
+        String refreshToken = refresh.replace("Bearer ", "");
 
         // refresh 토큰 유효한지 확인
         jwtUtils.validateRefreshToken(refreshToken);
-        String loginId = jwtUtils.getUsernameFromRefreshToken(refreshToken);
-        RefreshToken findRefreshToken = refreshTokenRepository.findByKeyLoginId(loginId)
+        Long userId = jwtUtils.getUserIdFromToken(refreshToken);
+        RefreshToken findRefreshToken = refreshTokenRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TOKEN_INVALID));
         if (!refreshToken.equals(findRefreshToken.getRefreshToken())) {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
 
-        User findUser = userRepository.findByLoginId(loginId);
-
+        User findUser = getUserOrThrow(userId);
         String createdAccessToken = jwtUtils.recreateAccessToken(findUser);
-
-        if (createdAccessToken == null) {
-            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
-        }
 
         AuthRecreateTokenResponse response = AuthRecreateTokenResponse.builder()
                 .accessToken(createdAccessToken)

@@ -2,15 +2,14 @@ package igoMoney.BE.common.jwt;
 
 import com.auth0.jwt.interfaces.Payload;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.ReadOnlyJWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import igoMoney.BE.common.config.AppleClient;
 import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
+import igoMoney.BE.common.jwt.dto.ApplePublicKeyResponse;
 import igoMoney.BE.common.jwt.dto.AppleTokenRequest;
 import igoMoney.BE.common.jwt.dto.AppleTokenResponse;
-import igoMoney.BE.common.jwt.dto.ApplePublicKeyResponse;
-import igoMoney.BE.service.AuthService;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -25,8 +24,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -34,7 +31,6 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -177,6 +173,7 @@ public class AppleJwtUtils extends JwtUtils {
         return null;
     }
 
+    // 애플에 토큰 요청
     // 1) Authorization code로 토큰 발급받기
     // 2) refresh token으로 access token 재발급
     public AppleTokenResponse getTokenResponse(Long userId, AppleTokenRequest appleTokenRequest) {

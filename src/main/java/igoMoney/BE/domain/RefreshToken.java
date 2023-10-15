@@ -19,6 +19,6 @@ public class RefreshToken extends BaseEntity {
     private Long id;
     @Column(length=600)
     private String refreshToken;
-    private String keyLoginId;
+    private Long userId;
 }
 

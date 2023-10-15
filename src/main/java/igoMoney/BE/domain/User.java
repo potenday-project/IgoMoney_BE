@@ -1,17 +1,23 @@
 package igoMoney.BE.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import igoMoney.BE.common.entity.BaseEntity;
 import igoMoney.BE.dto.request.UserUpdateRequest;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Entity
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User extends BaseEntity {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,8 +25,9 @@ public class User extends BaseEntity {
     private Long id;
 
     // 소셜 로그인
-    private String loginId;
+    private String loginId; // kakaoId
     private String provider; // 소셜로그인 구분 위함.
+    private String password;
 
     // 회원 기본 정보
     @Column(nullable = false)
@@ -29,6 +36,16 @@ public class User extends BaseEntity {
     private String nickname;
     private String image; // Storage에 저장된 이미지 파일 이름
     private String role; // ROLE_USER 혹은 ROLE_ADMIN
+    @Column(updatable = false)
+    @CreatedDate
+    private LocalDateTime createdDate;
+    @PrePersist
+    public void prePersist(){
+        LocalDateTime now = LocalDateTime.now();
+        createdDate = now;
+    }
+
+
 
     // 추가 정보
     @Builder.Default
@@ -41,6 +58,35 @@ public class User extends BaseEntity {
     @Builder.Default
     private Integer winCount=0;
 
+    // UserDetails
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Collection<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+        authorities.add(new SimpleGrantedAuthority(this.role));
+        return authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+    @Override
+    public String getUsername() {  return String.valueOf(this.id); }
+
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+
+    @Override
+    public boolean isEnabled() {return true; }
+
+
+    // 회원관리
     public void updateUser(UserUpdateRequest request) {
         this.nickname = request.getNickname();
     }
