@@ -1,27 +1,20 @@
 package igoMoney.BE.controller;
 
 import igoMoney.BE.common.jwt.AppleJwtUtils;
-//import igoMoney.BE.common.jwt.JwtAuthorizationFilter;
-//import igoMoney.BE.common.jwt.dto.AppleTokenRequest;
 import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
-import igoMoney.BE.common.jwt.dto.AppleTokenResponse;
-import igoMoney.BE.service.RecordService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import igoMoney.BE.common.jwt.dto.TokenDto;
 import igoMoney.BE.dto.request.FromAppleService;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
 import igoMoney.BE.service.AuthService;
 import igoMoney.BE.service.ChallengeService;
-//import jakarta.validation.Valid;
+import igoMoney.BE.service.RecordService;
+import igoMoney.BE.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-//import org.springframework.http.HttpHeaders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-//import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-//import org.springframework.security.core.Authentication;
-//import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
@@ -40,27 +33,33 @@ public class AuthController {
     private final ChallengeService challengeService;
     private final RecordService recordService;
     private final AppleJwtUtils appleJwtUtils;
+    private final RefreshTokenService refreshTokenService;
     //private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     // 카카오 로그인
-    @PostMapping("login/kakao/token/{accessToken}")
+    @PostMapping("login/kakao")
     @ResponseBody
-    public ResponseEntity<Void> kakaoLogin(@PathVariable("accessToken") String accessToken) throws IOException {
+    public ResponseEntity<TokenDto> kakaoLogin(@RequestBody TokenDto accessToken) throws IOException {
 
-        authService.kakaoLogin(accessToken);
+        TokenDto response = authService.kakaoLogin(accessToken.getAccessToken());
+        refreshTokenService.saveRefreshToken(response);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    // 카카오 로그인 테스트용
+    @PostMapping("login/kakao/redirect")
+    public ResponseEntity<Void> kakaoLoginPage(@RequestParam String code){
+
+        // 인가코드(code) 받기
+        System.out.println(">>> Kakao Code: "+code);
+
+        // 인가토큰(accessToken) 요청하기
+        authService.kakaoGetAccessToken(code);
 
         return new ResponseEntity(HttpStatus.OK);
     }
-
-    /*
-    public ResponseEntity<AuthTokenResponse> kakaoLoginCode(@PathVariable("code") String code) {
-
-        String access_Token = authService.getAccessToken(code);
-        authService.kakaoLogin(access_Token);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }*/
 
     // 1. 애플 로그인 페이지 - test용
     @GetMapping("login/apple/page")
@@ -78,32 +77,16 @@ public class AuthController {
     // 2. 로그인 후 Identity Token, AuthorizationCode 받기
     @PostMapping("login/apple/redirect")
     @ResponseBody
-    public ResponseEntity<AppleTokenResponse> getAppleUserIdToken(@RequestBody FromAppleService fromAppleService) throws Exception {
+    public ResponseEntity<TokenDto> getAppleUserIdToken(@RequestBody FromAppleService fromAppleService) throws Exception {
 
-        if (fromAppleService == null) {
-            return null;
-        }
-
-        String code = fromAppleService.getCode();
-        String refresh_token = fromAppleService.getRefresh_token();
-
-        // 3. client secret 토큰 만들기
-        String client_secret = appleJwtUtils.makeClientSecret();
-
-        logger.debug("================================");
-        logger.debug("id_token ‣ " + fromAppleService.getId_token());
-        logger.debug("client_secret ‣ " + client_secret);
-        logger.debug("================================");
-
-        // 4. public key 요청하기 (n, e 값 받고 키 생성)
-        // 5. Identity Token (JWT) 검증하기
-        // 6. ID토큰 payload 바탕으로 회원가입
+        // 3. public key 요청하기 (n, e 값 받고 키 생성)
+        // 4. Identity Token (JWT) 검증하기
+        // 5. ID토큰 payload 바탕으로 회원가입
         List<String> subNemail = appleJwtUtils.checkIdToken(fromAppleService.getId_token());
         // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회 & 회원가입
-        Long userId = authService.AppleSignUp(subNemail); // sub, email
-
-        // 7. Authorization Code로 JWT 토큰 발급받기
-        AppleTokenResponse response = appleJwtUtils.requestCodeValidations(userId, client_secret, code, refresh_token);
+        // 6. 서버에서 직접 JWT 토큰 발급하기 (access & refresh token)
+        TokenDto response =  authService.AppleSignUp(subNemail); // sub, email
+        refreshTokenService.saveRefreshToken(response);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -124,13 +107,12 @@ public class AuthController {
         return new ResponseEntity(HttpStatus.OK);
     }
 
-    // [카카오] refresh token으로 accessToken 재발급
-    @PostMapping("token")
+    // refresh token으로 accessToken 재발급
+    @PostMapping("refresh-token")
     @ResponseBody
     public ResponseEntity<AuthRecreateTokenResponse> refresh(@RequestBody Map<String, String> refreshToken){
 
-        //Refresh Token 검증 및 AccessToken 재발급
-        AuthRecreateTokenResponse response = authService.refresh(refreshToken.get("refreshToken"));
+        AuthRecreateTokenResponse response = authService.refreshToken(refreshToken.get("refreshToken"));
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

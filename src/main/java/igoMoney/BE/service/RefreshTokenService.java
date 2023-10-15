@@ -18,16 +18,15 @@ public class RefreshTokenService {
 
     public void saveRefreshToken(TokenDto tokenDto) {
 
+        Long userId = tokenDto.getUserId();
         RefreshToken refreshToken = RefreshToken.builder()
-                .keyLoginId(tokenDto.getKey())
+                .userId(userId)
                 .refreshToken(tokenDto.getRefreshToken())
                 .build();
 
-        String loginId = refreshToken.getKeyLoginId();
-        if(refreshTokenRepository.existsByKeyLoginId(loginId)) {
-            refreshTokenRepository.deleteByKeyLoginId(loginId);
+        if(refreshTokenRepository.existsByUserId(userId)) {
+            refreshTokenRepository.deleteByUserId(userId);
         }
-
         refreshTokenRepository.save(refreshToken);
     }
 }
