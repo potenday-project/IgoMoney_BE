@@ -1,24 +1,17 @@
 package igoMoney.BE.service;
 
 
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3Utilities;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import software.amazon.awssdk.core.sync.RequestBody;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.*;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 import java.util.UUID;
 
 @Service
@@ -103,9 +96,7 @@ public class ImageService {
         if (StringUtils.isBlank(image)) {
             return null;
         }
-//        if (image.startsWith("https://")) { // 구글 프로필 이미지 처리
-//            return image;
-//        }
+
         System.out.println(">>>>>>>>>> >>>>>>>>>>"+ image);
         return "https://igomoney-bucket.s3.ap-northeast-2.amazonaws.com/" + image;
     }

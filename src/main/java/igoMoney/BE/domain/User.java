@@ -25,7 +25,7 @@ public class User implements UserDetails {
     private Long id;
 
     // 소셜 로그인
-    private String loginId; // kakaoId
+    private String loginId; // kakaoId, apple-SUB
     private String provider; // 소셜로그인 구분 위함.
     private String password;
 

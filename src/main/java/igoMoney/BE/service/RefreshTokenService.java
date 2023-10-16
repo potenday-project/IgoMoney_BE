@@ -1,5 +1,7 @@
 package igoMoney.BE.service;
 
+import igoMoney.BE.common.exception.CustomException;
+import igoMoney.BE.common.exception.ErrorCode;
 import igoMoney.BE.common.jwt.dto.TokenDto;
 import igoMoney.BE.domain.RefreshToken;
 import igoMoney.BE.repository.RefreshTokenRepository;
@@ -28,5 +30,13 @@ public class RefreshTokenService {
             refreshTokenRepository.deleteByUserId(userId);
         }
         refreshTokenRepository.save(refreshToken);
+    }
+
+    public void checkRefreshToken(Long userId, String token){
+        RefreshToken token2 = refreshTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TOKEN_INVALID));
+        if(!token2.getRefreshToken().equals(token)){
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
+        }
     }
 }
