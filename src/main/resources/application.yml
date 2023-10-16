@@ -90,4 +90,4 @@ kakao:
 
 logging:
   level:
-    action.in.blog: DEBUG
+    igoMoney.BE.common.config: DEBUG
