@@ -25,8 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -247,48 +248,12 @@ public class AuthService {
         KakaoSignOutRequest request = KakaoSignOutRequest.builder()
                 .target_id(Long.parseLong(kakaoId))
                 .build();
-//        Map<String, String> authHeader = new HashMap<>();
-//        String auth = "KakaoAK "+ kakaoAdminKey;
-//        authHeader.put("Authorization", auth);
-//        authHeader.put("Content-Type", "application/x-www-form-urlencoded");
-//        authHeader.forEach((s, o) -> System.out.println(s + " : " + o));
-//        kakaoClient.signOut(authHeader, request);
-        String reqURL = "https://kapi.kakao.com/v1/user/unlink";
-        try {
-            URL url = new URL(reqURL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization", "KakaoAK " + kakaoAdminKey);
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            conn.setDoOutput(true);
-
-//            String json = "{\"target_id_type\":\"user_id\", \"target_id\":"+String.valueOf(userId)+"}";
-            String urlParameters  = "target_id_type=user_id&target_id="+kakaoId;
-            byte[] data = urlParameters.getBytes( StandardCharsets.UTF_8 );
-            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-            wr.write( data );
-
-            int responseCode = conn.getResponseCode();
-            System.out.println("==============================");
-            System.out.println("responseCode : " + responseCode);
-            System.out.println("response: "+conn.getResponseMessage());
-            BufferedReader br = null;
-            if(responseCode !=200){
-                System.out.println("Error: "+conn.getErrorStream());
-                br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-            }
-            else{
-                br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            }
-            String result = "";
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                result += line;
-            }
-            System.out.println(result);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Map<String, String> authHeader = new HashMap<>();
+        String auth = "KakaoAK "+ kakaoAdminKey;
+        authHeader.put("Authorization", auth);
+        authHeader.put("Content-Type", "application/x-www-form-urlencoded");
+        authHeader.forEach((s, o) -> System.out.println(s + " : " + o));
+        kakaoClient.signOut(authHeader, request);
 
         // User 정보 삭제
         deleteUser(userId);
