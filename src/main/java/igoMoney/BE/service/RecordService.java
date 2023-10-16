@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -39,6 +40,7 @@ public class RecordService {
         Challenge challenge = getChallengeOrThrow(request.getUserId());
         checkPermission(findUser, request.getChallengeId());
 
+        checkExistsImage(request.getImage());
         String image = imageService.uploadImage(request.getImage());
         Record record = Record.builder()
                 .challenge(challenge)
@@ -138,4 +140,12 @@ public class RecordService {
         }
     }
 
+
+    // 예외 처리 - 이미지 존재여부
+    private void checkExistsImage(MultipartFile image) {
+
+        if (image.isEmpty()) {
+            throw new CustomException(ErrorCode.SHOULD_EXIST_IMAGE);
+        }
+    }
 }

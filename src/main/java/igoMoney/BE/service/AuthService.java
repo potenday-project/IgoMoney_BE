@@ -3,17 +3,19 @@ package igoMoney.BE.service;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import igoMoney.BE.common.config.AppleClient;
+import igoMoney.BE.common.config.KakaoClient;
 import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
 import igoMoney.BE.common.jwt.AppleJwtUtils;
 import igoMoney.BE.common.jwt.JwtUtils;
 import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
+import igoMoney.BE.common.jwt.dto.KakaoSignOutRequest;
 import igoMoney.BE.common.jwt.dto.TokenDto;
-import igoMoney.BE.domain.RefreshToken;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
 import igoMoney.BE.repository.RefreshTokenRepository;
 import igoMoney.BE.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -38,11 +41,15 @@ public class AuthService {
     private final AppleJwtUtils appleJwtUtils;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AppleClient appleClient;
+    private final KakaoClient kakaoClient;
+    private final EntityManager em;
 
     @Value("${spring.security.oauth2.client.registeration.kakao.client-id}")
     private String kakaoClientId;
     @Value("${spring.security.oauth2.client.registeration.kakao.client-secret}")
     private String kakaoClientSecret;
+    @Value("${kakao.admin-key}")
+    private String kakaoAdminKey;
 
     // 애플 회원가입
     public TokenDto AppleSignUp(List<String> subNemail) {
@@ -158,12 +165,12 @@ public class AuthService {
             JsonParser parser = new JsonParser();
             JsonElement element = parser.parse(result);
 
-            int id = element.getAsJsonObject().get("id").getAsInt(); // 카카오 회원번호
+            String id = element.getAsJsonObject().get("id").getAsString(); // 카카오 회원번호
             String email = "";
             String image = "";
             //String nickname = "";
             email = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("email").getAsString();
-            image = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("profile").getAsJsonObject().get("profile_image_url").getAsString();
+            image = element.getAsJsonObject().get("properties").getAsJsonObject().get("profile_image").getAsString();
             //nickname = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("profile").getAsJsonObject().get("nickname").getAsString();
 
             System.out.println("id : " + id);
@@ -182,6 +189,7 @@ public class AuthService {
                         .provider("kakao")
                         .email(email)
                         .image(image)
+                        .loginId(id)
                         //.nickname(nickname)
                         .role("ROLE_USER")
                         .build();
@@ -208,11 +216,7 @@ public class AuthService {
         // refresh 토큰 유효한지 확인
         jwtUtils.validateRefreshToken(refreshToken);
         Long userId = jwtUtils.getUserIdFromToken(refreshToken);
-        RefreshToken findRefreshToken = refreshTokenRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TOKEN_INVALID));
-        if (!refreshToken.equals(findRefreshToken.getRefreshToken())) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
-        }
+        refreshTokenService.checkRefreshToken(userId, refreshToken);
 
         User findUser = getUserOrThrow(userId);
         String createdAccessToken = jwtUtils.recreateAccessToken(findUser);
@@ -226,16 +230,76 @@ public class AuthService {
     }
 
     // 애플 회원탈퇴
-    public void appleSignOut(AppleSignOutRequest request) throws IOException {
+    public void appleSignOut(AppleSignOutRequest request) {
 
         // 애플 연동해제
         request.setClient_id(appleJwtUtils.getClientId());
-        request.setClient_secret(appleJwtUtils.makeClientSecret());
         appleClient.signOut(request);
 
         // User 정보 삭제
-        User findUser = getUserOrThrow(request.getUserId());
-        userRepository.delete(findUser);
+        deleteUser(request.getUserId());
+    }
+
+    // 카카오 회원탈퇴
+    public void kakaoSignOut(Long userId) {
+
+        String kakaoId = getUserOrThrow(userId).getLoginId();
+        KakaoSignOutRequest request = KakaoSignOutRequest.builder()
+                .target_id(Long.parseLong(kakaoId))
+                .build();
+//        Map<String, String> authHeader = new HashMap<>();
+//        String auth = "KakaoAK "+ kakaoAdminKey;
+//        authHeader.put("Authorization", auth);
+//        authHeader.put("Content-Type", "application/x-www-form-urlencoded");
+//        authHeader.forEach((s, o) -> System.out.println(s + " : " + o));
+//        kakaoClient.signOut(authHeader, request);
+        String reqURL = "https://kapi.kakao.com/v1/user/unlink";
+        try {
+            URL url = new URL(reqURL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "KakaoAK " + kakaoAdminKey);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setDoOutput(true);
+
+//            String json = "{\"target_id_type\":\"user_id\", \"target_id\":"+String.valueOf(userId)+"}";
+            String urlParameters  = "target_id_type=user_id&target_id="+kakaoId;
+            byte[] data = urlParameters.getBytes( StandardCharsets.UTF_8 );
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            wr.write( data );
+
+            int responseCode = conn.getResponseCode();
+            System.out.println("==============================");
+            System.out.println("responseCode : " + responseCode);
+            System.out.println("response: "+conn.getResponseMessage());
+            BufferedReader br = null;
+            if(responseCode !=200){
+                System.out.println("Error: "+conn.getErrorStream());
+                br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+            }
+            else{
+                br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            }
+            String result = "";
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                result += line;
+            }
+            System.out.println(result);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // User 정보 삭제
+        deleteUser(userId);
+    }
+
+    // User 정보 삭제
+    private void deleteUser(Long userId){
+//        User findUser = getUserOrThrow(userId);
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+        userRepository.deleteById(userId);
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
     }
 
     // 로그아웃

@@ -14,4 +14,5 @@ public class FromAppleService {
     private String id_token;
     private String user;
     private String refresh_token;
+    private Long userId;
 }

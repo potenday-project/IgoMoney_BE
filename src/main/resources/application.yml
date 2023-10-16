@@ -84,3 +84,10 @@ spring:
 jwt:
   secret: ${application.jwt.secret}
   secret_refresh: ${application.jwt.secret_refresh}
+
+kakao:
+  admin-key: ${kakao.admin-key}
+
+logging:
+  level:
+    action.in.blog: DEBUG

@@ -2,6 +2,7 @@ package igoMoney.BE.controller;
 
 import igoMoney.BE.common.jwt.AppleJwtUtils;
 import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
+import igoMoney.BE.common.jwt.dto.AppleTokenResponse;
 import igoMoney.BE.common.jwt.dto.TokenDto;
 import igoMoney.BE.dto.request.FromAppleService;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
@@ -11,8 +12,6 @@ import igoMoney.BE.service.RecordService;
 import igoMoney.BE.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -34,8 +33,6 @@ public class AuthController {
     private final RecordService recordService;
     private final AppleJwtUtils appleJwtUtils;
     private final RefreshTokenService refreshTokenService;
-    //private final AuthenticationManagerBuilder authenticationManagerBuilder;
-    private Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     // 카카오 로그인
     @PostMapping("login/kakao")
@@ -50,6 +47,7 @@ public class AuthController {
 
     // 카카오 로그인 테스트용
     @PostMapping("login/kakao/redirect")
+    @ResponseBody
     public ResponseEntity<Void> kakaoLoginPage(@RequestParam String code){
 
         // 인가코드(code) 받기
@@ -94,15 +92,40 @@ public class AuthController {
     // [애플]  회원탈퇴
     @PostMapping("signout/apple")
     @ResponseBody
-    public ResponseEntity<Void> appleSignOut(@RequestBody AppleSignOutRequest request) throws IOException {
+    public ResponseEntity<Void> appleSignOut(@RequestBody FromAppleService request) throws IOException {
 
         // 챌린지 중단 및 패배처리
         challengeService.giveUpChallengeSignOut(request.getUserId());
         // User가 작성한 모든 Challenge record 삭제
         recordService.deleteAllUserRecords(request.getUserId());
 
+
         // 애플 연동해제 및 회원정보(User) 삭제
-        authService.appleSignOut(request);
+        String client_secret = appleJwtUtils.makeClientSecret();
+        AppleTokenResponse response = appleJwtUtils.requestCodeValidations(request.getUserId(), client_secret, request.getCode(), null);
+
+        AppleSignOutRequest appleRequest = AppleSignOutRequest.builder()
+                .userId(request.getUserId())
+                .client_secret(client_secret)
+                .token_type_hint("refresh_token")
+                .token(response.getRefresh_token())
+                .build();
+        authService.appleSignOut(appleRequest);
+
+        return new ResponseEntity(HttpStatus.OK);
+    }
+
+    // 카카오 회원탈퇴
+    @PostMapping("signout/kakao/{userId}")
+    @ResponseBody
+    public ResponseEntity<Void> kakaoSignOut(@PathVariable Long userId){
+
+        // 챌린지 중단 및 패배처리
+        challengeService.giveUpChallengeSignOut(userId);
+        // User가 작성한 모든 Challenge record 삭제
+        recordService.deleteAllUserRecords(userId);
+        // 카카오 연동해제 및 회원정보(User) 삭제
+        authService.kakaoSignOut(userId);
 
         return new ResponseEntity(HttpStatus.OK);
     }
@@ -110,7 +133,7 @@ public class AuthController {
     // refresh token으로 accessToken 재발급
     @PostMapping("refresh-token")
     @ResponseBody
-    public ResponseEntity<AuthRecreateTokenResponse> refresh(@RequestBody Map<String, String> refreshToken){
+    public ResponseEntity<AuthRecreateTokenResponse> refreshToken(@RequestBody Map<String, String> refreshToken){
 
         AuthRecreateTokenResponse response = authService.refreshToken(refreshToken.get("refreshToken"));
 
