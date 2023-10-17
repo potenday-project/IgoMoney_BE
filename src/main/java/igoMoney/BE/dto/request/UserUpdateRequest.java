@@ -17,6 +17,5 @@ public class UserUpdateRequest {
     @NotEmpty
     private String nickname;
     private MultipartFile image;
-    @NotNull
     private Boolean imageChanged; // 프로필 이미지 변경 여부
 }

@@ -61,6 +61,9 @@ public class UserService {
 
         User findUser = getUserOrThrow(request.getId());
         String image = null;
+        if (request.getImageChanged() == null){
+            request.setImageChanged(false);
+        }
 
         if (!request.getNickname().equals(findUser.getNickname())) {
             checkNicknameDuplicate(request.getNickname());
