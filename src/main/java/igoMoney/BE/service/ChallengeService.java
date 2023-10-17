@@ -110,7 +110,7 @@ public class ChallengeService {
         challengeRepository.save(challenge);
         // 회원 - 챌린지 참여중으로 상태 변경
         // 회원 - 현재 진행중인 챌린지 저장
-        findUser.updateUser(true, challenge.getId());
+        findUser.updateUserStatus(true, challenge.getId());
         findUser.addChallengeCount();
 
         ChallengeUser challengeUser = ChallengeUser.builder()
@@ -131,7 +131,7 @@ public class ChallengeService {
             throw new CustomException(ErrorCode.EXIST_USER_CHALLENGE);
         }
         Challenge findChallenge = getChallengeOrThrow(challengeId);
-        findUser.updateUser(true, challengeId); // 챌린지 참여 정보 업데이트
+        findUser.updateUserStatus(true, challengeId); // 챌린지 참여 정보 업데이트
         findUser.addChallengeCount();
 
         ChallengeUser challengeUser  = ChallengeUser.builder()
@@ -178,14 +178,14 @@ public class ChallengeService {
         Challenge findChallenge = getChallengeOrThrow(user.getMyChallengeId());
 
         findChallenge.stopChallenge(); // 챌린지 중단 설정
-        user.updateUser(false, null);  // 사용자 챌린지 상태 변경
+        user.updateUserStatus(false, null);  // 사용자 챌린지 상태 변경
 
         User user2 = getChallengeOtherUser(user.getMyChallengeId(), user.getId());
         if (user2 == null){ return;} // 상대방 없을 때
 
         // 상대방 있을 때
         user.deleteBadge(); // 뱃지 개수 차감하기
-        user2.updateUser(false, null); // 상대방 챌린지 상태 변경
+        user2.updateUserStatus(false, null); // 상대방 챌린지 상태 변경
         user2.addBadge();
         user2.addWinCount();
         findChallenge.setWinner(user2.getId());
@@ -262,7 +262,7 @@ public class ChallengeService {
                 User lose = getChallengeOtherUser(c.getId(), winnerId);
                 for(User u : userList) {
                     // 유저 : 챌린지 종료로 설정
-                    u.updateUser(false, null);
+                    u.updateUserStatus(false, null);
 
                     if (u.getId().equals(winnerId)) {
                         // 챌린지 승리자

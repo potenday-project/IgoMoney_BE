@@ -2,14 +2,13 @@ package igoMoney.BE.controller;
 
 import igoMoney.BE.dto.request.UserUpdateRequest;
 import igoMoney.BE.dto.response.NotificationResponse;
-import igoMoney.BE.dto.response.RecordResponse;
 import igoMoney.BE.dto.response.UserResponse;
 import igoMoney.BE.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -44,7 +43,7 @@ public class UserController {
 
     // 회원정보 수정
     @PatchMapping("")
-    public ResponseEntity<Void> updateUser(UserUpdateRequest request) throws IOException {
+    public ResponseEntity<Void> updateUser(@Valid UserUpdateRequest request) throws IOException {
 
         userService.updateUser(request);
 

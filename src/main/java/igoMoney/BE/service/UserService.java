@@ -26,6 +26,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final ImageService imageService;
 
     // 회원 정보 조회
     @Transactional(readOnly = true)
@@ -55,16 +56,23 @@ public class UserService {
     }
 
 
-    // 닉네임 변경하기 (회원가입 시 애플은 빈칸으로 가입됨. 닉네임 설정 후 홈화면 나옴)
+    // 회원정보 변경하기 (회원가입 시 애플은 빈칸으로 가입됨. 닉네임 설정 후 홈화면 나옴)
     public void updateUser(UserUpdateRequest request) throws IOException {
 
         User findUser = getUserOrThrow(request.getId());
+        String image = null;
 
         if (!request.getNickname().equals(findUser.getNickname())) {
             checkNicknameDuplicate(request.getNickname());
         }
+        if(request.getImageChanged()){
+            if(request.getImage().isEmpty() || request.getImage() == null){
+                throw new CustomException(ErrorCode.SHOULD_EXIST_IMAGE);
+            }
+            image = imageService.uploadImage(request.getImage());
+        }
 
-        findUser.updateUser(request);
+        findUser.updateUser(request, image);
     }
 
     // 확인 안한 알림 목록 조회

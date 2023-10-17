@@ -87,10 +87,13 @@ public class User implements UserDetails {
 
 
     // 회원관리
-    public void updateUser(UserUpdateRequest request) {
+    public void updateUser(UserUpdateRequest request, String imageUrl) {
         this.nickname = request.getNickname();
+        if(request.getImageChanged()){
+            this.image = imageUrl;
+        }
     }
-    public void updateUser(Boolean inChallenge, Long myChallengeId) {
+    public void updateUserStatus(Boolean inChallenge, Long myChallengeId) {
         this.inChallenge = inChallenge;
         this.myChallengeId = myChallengeId;
     }
