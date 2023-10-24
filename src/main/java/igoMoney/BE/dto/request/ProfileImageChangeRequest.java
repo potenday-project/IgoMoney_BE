@@ -1,6 +1,5 @@
 package igoMoney.BE.dto.request;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,12 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserUpdateRequest {
+public class ProfileImageChangeRequest {
 
     @NotNull
-    private Long id;
-    @NotEmpty
-    private String nickname;
+    private Long userId;
+    @NotNull
     private MultipartFile image;
-    private Boolean imageChanged; // 프로필 이미지 변경 여부
 }

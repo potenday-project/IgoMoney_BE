@@ -1,6 +1,5 @@
 package igoMoney.BE.domain;
 
-import igoMoney.BE.dto.request.UserUpdateRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -87,12 +86,14 @@ public class User implements UserDetails {
 
 
     // 회원관리
-    public void updateUser(UserUpdateRequest request, String imageUrl) {
-        this.nickname = request.getNickname();
-        if(request.getImageChanged()){
-            this.image = imageUrl;
-        }
+    public void updateProfileImage(String imageUUID) {
+        this.image = imageUUID;
     }
+
+    public void updateNickname(String newNick) {
+        this.nickname = newNick;
+    }
+
     public void updateUserStatus(Boolean inChallenge, Long myChallengeId) {
         this.inChallenge = inChallenge;
         this.myChallengeId = myChallengeId;

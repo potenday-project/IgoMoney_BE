@@ -4,7 +4,6 @@ import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
 import igoMoney.BE.domain.Notification;
 import igoMoney.BE.domain.User;
-import igoMoney.BE.dto.request.UserUpdateRequest;
 import igoMoney.BE.dto.response.NotificationResponse;
 import igoMoney.BE.dto.response.UserResponse;
 import igoMoney.BE.repository.NotificationRepository;
@@ -13,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,12 +33,13 @@ public class UserService {
     public UserResponse getUser(Long userId) {
 
         User findUser = getUserOrThrow(userId);
+        String imageUrl = imageService.processImage(findUser.getImage());
 
         UserResponse response = UserResponse.builder()
                 .id(findUser.getId())
                 .email(findUser.getEmail())
                 .nickname(findUser.getNickname())
-                .image(findUser.getImage())
+                .image(imageUrl)
                 .role(findUser.getRole())
                 .build();
 
@@ -56,26 +57,24 @@ public class UserService {
     }
 
 
-    // 회원정보 변경하기 (회원가입 시 애플은 빈칸으로 가입됨. 닉네임 설정 후 홈화면 나옴)
-    public void updateUser(UserUpdateRequest request) throws IOException {
+    // 회원 닉네임 변경하기 (회원가입 시 빈칸으로 가입됨. 닉네임 설정 후 홈화면 나옴)
+    public void changeUserNickname(Long userId, String nickname) {
 
-        User findUser = getUserOrThrow(request.getId());
-        String image = null;
-        if (request.getImageChanged() == null){
-            request.setImageChanged(false);
-        }
+        User findUser = getUserOrThrow(userId);
+        checkNicknameDuplicate(nickname);
+        findUser.updateNickname(nickname);
+    }
 
-        if (!request.getNickname().equals(findUser.getNickname())) {
-            checkNicknameDuplicate(request.getNickname());
-        }
-        if(request.getImageChanged()){
-            if(request.getImage().isEmpty() || request.getImage() == null){
-                throw new CustomException(ErrorCode.SHOULD_EXIST_IMAGE);
-            }
-            image = imageService.uploadImage(request.getImage());
-        }
+    // 회원 프로필 이미지 변경
+    public void changeProfileImage(Long userId, MultipartFile image) throws IOException {
 
-        findUser.updateUser(request, image);
+        User findUser = getUserOrThrow(userId);
+        String uuid = null;
+        if(image.isEmpty()){
+            throw new CustomException(ErrorCode.SHOULD_EXIST_IMAGE);
+        }
+        uuid = imageService.uploadImage(image);
+        findUser.updateProfileImage(uuid);
     }
 
     // 확인 안한 알림 목록 조회
