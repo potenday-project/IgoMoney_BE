@@ -34,4 +34,11 @@ public class Record extends BaseEntity {
     private String image;
     @Column(nullable = false)
     private LocalDate date;
+
+    public void updateRecord(String title, String content, Integer cost, String image){
+        this.title = title;
+        this.content = content;
+        this.cost = cost;
+        this.image = image;
+    }
 }

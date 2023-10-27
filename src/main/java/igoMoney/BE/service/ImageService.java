@@ -20,10 +20,6 @@ import java.util.UUID;
 @Transactional
 public class ImageService {
 
-
-
-
-
     private final S3Client s3Client;
 
     // Upload 하고자 하는 버킷의 이름
