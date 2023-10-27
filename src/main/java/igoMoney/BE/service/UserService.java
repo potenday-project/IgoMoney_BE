@@ -37,10 +37,15 @@ public class UserService {
 
         UserResponse response = UserResponse.builder()
                 .id(findUser.getId())
+                .provider(findUser.getProvider())
                 .email(findUser.getEmail())
                 .nickname(findUser.getNickname())
                 .image(imageUrl)
                 .role(findUser.getRole())
+                .inChallenge(findUser.getInChallenge())
+                .challengeCount(findUser.getChallengeCount())
+                .winCount(findUser.getWinCount())
+                .badgeCount(findUser.getBadgeCount())
                 .build();
 
         return response;
