@@ -6,6 +6,7 @@ import igoMoney.BE.domain.Challenge;
 import igoMoney.BE.domain.Record;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.dto.request.RecordSaveRequest;
+import igoMoney.BE.dto.request.RecordUpdateRequest;
 import igoMoney.BE.dto.response.RecordResponse;
 import igoMoney.BE.repository.ChallengeRepository;
 import igoMoney.BE.repository.RecordRepository;
@@ -111,6 +112,22 @@ public class RecordService {
         }
     }
 
+    // record 삭제
+    public void deleteRecord(Long recordId) {
+
+        Record findRecord = getRecordOrThrow(recordId);
+        recordRepository.delete(findRecord);
+    }
+
+    // record 수정
+    public void updateRecord(RecordUpdateRequest request) throws IOException {
+
+        Record findRecord = getRecordOrThrow(request.getRecordId());
+        checkExistsImage(request.getImage());
+        String image = imageService.uploadImage(request.getImage());
+        findRecord.updateRecord(request.getTitle(), request.getContent(), request.getCost(), image);
+    }
+
     // 예외 처리 - 존재하는 record 인가
     private Record getRecordOrThrow(Long id) {
 
@@ -144,7 +161,7 @@ public class RecordService {
     // 예외 처리 - 이미지 존재여부
     private void checkExistsImage(MultipartFile image) {
 
-        if (image.isEmpty()) {
+        if ((image == null) || image.isEmpty()) {
             throw new CustomException(ErrorCode.SHOULD_EXIST_IMAGE);
         }
     }

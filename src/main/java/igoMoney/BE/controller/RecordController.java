@@ -1,6 +1,7 @@
 package igoMoney.BE.controller;
 
 import igoMoney.BE.dto.request.RecordSaveRequest;
+import igoMoney.BE.dto.request.RecordUpdateRequest;
 import igoMoney.BE.dto.response.IdResponse;
 import igoMoney.BE.dto.response.RecordResponse;
 import igoMoney.BE.service.RecordService;
@@ -9,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -54,4 +54,19 @@ public class RecordController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    // record 삭제
+    @DeleteMapping("delete/{recordId}")
+    public ResponseEntity<Void> deleteRecord(@PathVariable("recordId") Long recordId ) {
+
+        recordService.deleteRecord(recordId);
+        return new ResponseEntity(HttpStatus.OK);
+    }
+
+    // record 수정
+    @PatchMapping("edit")
+    public ResponseEntity<Void> updateRecord(@Valid RecordUpdateRequest request) throws IOException {
+
+        recordService.updateRecord(request);
+        return new ResponseEntity(HttpStatus.OK);
+    }
 }
