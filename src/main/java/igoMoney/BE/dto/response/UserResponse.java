@@ -15,4 +15,10 @@ public class UserResponse {
     private String nickname;
     private String image;
     private String role;
+
+    private Boolean inChallenge;
+    private Long myChallengeId;
+    private Integer challengeCount;
+    private Integer winCount;
+    private Integer badgeCount;
 }
