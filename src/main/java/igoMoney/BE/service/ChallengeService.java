@@ -173,12 +173,13 @@ public class ChallengeService {
         cancelChallenge(findUser);
     }
 
-    private void cancelChallenge(User user) {
+    public void cancelChallenge(User user) {
 
         Challenge findChallenge = getChallengeOrThrow(user.getMyChallengeId());
 
         findChallenge.stopChallenge(); // 챌린지 중단 설정
         user.updateUserStatus(false, null);  // 사용자 챌린지 상태 변경
+        user.resetReportedCount();
 
         User user2 = getChallengeOtherUser(user.getMyChallengeId(), user.getId());
         if (user2 == null){ return;} // 상대방 없을 때
@@ -186,6 +187,7 @@ public class ChallengeService {
         // 상대방 있을 때
         user.deleteBadge(); // 뱃지 개수 차감하기
         user2.updateUserStatus(false, null); // 상대방 챌린지 상태 변경
+        user2.resetReportedCount();
         user2.addBadge();
         user2.addWinCount();
         findChallenge.setWinner(user2.getId());
@@ -227,7 +229,7 @@ public class ChallengeService {
         Boolean check =false;
         Integer tempCost = 99999999;
         for (Challenge c : challengeList) {
-            if (c.getStartDate().plusDays(7).equals(LocalDate.now())){
+            if (c.getStartDate().plusDays(7).isEqual(LocalDate.now())){
                 // Challenge : 챌린지 종료 설정
                 c.finishChallenge();
 
@@ -263,6 +265,7 @@ public class ChallengeService {
                 for(User u : userList) {
                     // 유저 : 챌린지 종료로 설정
                     u.updateUserStatus(false, null);
+                    u.resetReportedCount();
 
                     if (u.getId().equals(winnerId)) {
                         // 챌린지 승리자

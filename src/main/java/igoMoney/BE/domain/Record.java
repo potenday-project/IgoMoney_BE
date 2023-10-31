@@ -34,6 +34,9 @@ public class Record extends BaseEntity {
     private String image;
     @Column(nullable = false)
     private LocalDate date;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean hide = false; // 신고당했을 때 가림
 
     public void updateRecord(String title, String content, Integer cost, String image){
         this.title = title;
@@ -41,4 +44,6 @@ public class Record extends BaseEntity {
         this.cost = cost;
         this.image = image;
     }
+
+    public void setHidden() { this.hide = true; }
 }

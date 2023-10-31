@@ -17,4 +17,5 @@ public class RecordResponse {
     private String image;
     private Integer cost;
     private LocalDate date;
+    private Boolean hide;
 }
