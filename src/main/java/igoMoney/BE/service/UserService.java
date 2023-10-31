@@ -10,11 +10,13 @@ import igoMoney.BE.repository.NotificationRepository;
 import igoMoney.BE.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,6 +105,17 @@ public class UserService {
 
         Notification findNotification = getNotificationOrThrow(notificationId);
         findNotification.markChecked();
+    }
+
+    // Ban 된 유저 정지해제
+    @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    public void unsuspendUser() {
+        List<User> bannedUserList = userRepository.findAllByBanned(true);
+        for (User u : bannedUserList) {
+            if(u.getBanReleaseDate().isEqual(LocalDate.now()) || u.getBanReleaseDate().isAfter(LocalDate.now())){
+                u.setUnbanned();
+            }
+        }
     }
 
 

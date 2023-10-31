@@ -2,15 +2,13 @@ package igoMoney.BE.service;
 
 import igoMoney.BE.common.exception.CustomException;
 import igoMoney.BE.common.exception.ErrorCode;
-import igoMoney.BE.domain.Challenge;
+import igoMoney.BE.domain.*;
 import igoMoney.BE.domain.Record;
-import igoMoney.BE.domain.User;
+import igoMoney.BE.dto.request.RecordReportRequest;
 import igoMoney.BE.dto.request.RecordSaveRequest;
 import igoMoney.BE.dto.request.RecordUpdateRequest;
 import igoMoney.BE.dto.response.RecordResponse;
-import igoMoney.BE.repository.ChallengeRepository;
-import igoMoney.BE.repository.RecordRepository;
-import igoMoney.BE.repository.UserRepository;
+import igoMoney.BE.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +31,13 @@ public class RecordService {
     private final RecordRepository recordRepository;
     private final UserRepository userRepository;
     private final ChallengeRepository challengeRepository;
+    private final UserReportRepository userReportRepository;
+    private final NotificationRepository notificationRepository;
     private final ImageService imageService;
+    private final ChallengeService challengeService;
+
+    private List<String> reportReasons = List.of("스팸", "나체 이미지/음란한 내용", "상품 판매 및 홍보", "자해/자살", "저작권/명에훼손/기타 권리 침해", "특정인의 개인정보 포함", "혐오 조장 내용");
+    DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
 
     // record 등록하기
     public Long saveRecord (RecordSaveRequest request) throws IOException {
@@ -73,6 +78,7 @@ public class RecordService {
                 .cost(record.getCost())
                 .image(imageUrl)
                 .date(record.getDate())
+                .hide(record.getHide())
                 .build();
 
         return response;
@@ -95,6 +101,7 @@ public class RecordService {
                     .cost(record.getCost())
                     .image(image)
                     .date(record.getDate())
+                    .hide(record.getHide())
                     .build();
 
             responseList.add(recordResponse);
@@ -126,6 +133,45 @@ public class RecordService {
         checkExistsImage(request.getImage());
         String image = imageService.uploadImage(request.getImage());
         findRecord.updateRecord(request.getTitle(), request.getContent(), request.getCost(), image);
+    }
+
+    public Long reportRecord(RecordReportRequest request) {
+
+        UserReport userReport = UserReport.builder()
+                .reporterId(request.getReporter_userId())
+                .offenderId(request.getOffender_userId())
+                .recordId(request.getRecordId())
+                .reason(request.getReason())
+                .build();
+
+        userReportRepository.save(userReport);
+        User offender = getUserOrThrow(request.getOffender_userId());
+        offender.addReportedCount();
+        // 신고 알림
+        Notification reportNotification = Notification.builder()
+                .user(offender)
+                .title("회원님의 챌린지 인증글이 신고되었습니다")
+                .message("신고 사유: "+reportReasons.get(request.getReason()))
+                .build();
+        notificationRepository.save(reportNotification);
+
+        // hide record
+        Record record = getRecordOrThrow(request.getRecordId());
+        record.setHidden();
+
+        if (offender.getReportedCount() >= 3 ){
+            offender.setBanned();
+            offender.setBanReleaseDate(LocalDate.now().plusDays(7));
+            // 신고 알림
+            Notification banNotification = Notification.builder()
+                    .user(offender)
+                    .title("신고가 누적되어 챌린지 참여가 제한됩니다")
+                    .message("제한 해제 날짜: " + offender.getBanReleaseDate().format(dateFormat))
+                    .build();
+            notificationRepository.save(banNotification);
+            challengeService.cancelChallenge(offender);
+        }
+        return userReport.getId();
     }
 
     // 예외 처리 - 존재하는 record 인가

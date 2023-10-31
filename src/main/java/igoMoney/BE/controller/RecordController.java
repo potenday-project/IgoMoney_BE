@@ -1,5 +1,6 @@
 package igoMoney.BE.controller;
 
+import igoMoney.BE.dto.request.RecordReportRequest;
 import igoMoney.BE.dto.request.RecordSaveRequest;
 import igoMoney.BE.dto.request.RecordUpdateRequest;
 import igoMoney.BE.dto.response.IdResponse;
@@ -68,5 +69,17 @@ public class RecordController {
 
         recordService.updateRecord(request);
         return new ResponseEntity(HttpStatus.OK);
+    }
+
+    // 불량 record 신고하기
+    @PostMapping("report")
+    public ResponseEntity<IdResponse> reportRecord (@Valid RecordReportRequest request) throws IOException {
+
+        Long userReportId = recordService.reportRecord(request);
+        IdResponse response = IdResponse.builder()
+                .id(userReportId)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

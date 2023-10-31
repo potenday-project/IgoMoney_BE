@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,6 +51,11 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean inChallenge=false;
     private Long myChallengeId; // 사용자가 등록 후 대기중인 챌린지 / 참여중인 챌린지
+    @Builder.Default
+    private Boolean banned = false;
+    private LocalDate banReleaseDate;
+    @Builder.Default
+    private Integer reportedCount = 0;
     @Builder.Default
     private Integer challengeCount=0;
     @Builder.Default
@@ -103,4 +109,9 @@ public class User implements UserDetails {
     public void addBadge() { this.badgeCount +=1;}
     public void addChallengeCount() { this.challengeCount +=1;}
     public void addWinCount() { this.winCount +=1;}
+    public void addReportedCount() {this.reportedCount +=1; }
+    public void resetReportedCount() { this.reportedCount = 0; }
+    public void setBanned() { this.banned = true; }
+    public void setUnbanned() { this.banned = false; this.banReleaseDate = null; }
+    public void setBanReleaseDate(LocalDate date) { this.banReleaseDate = date; }
 }
