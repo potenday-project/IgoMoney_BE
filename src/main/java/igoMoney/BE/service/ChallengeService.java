@@ -221,20 +221,20 @@ public class ChallengeService {
     }
 
     // 챌린지의 각 사용자별 누적금액 조회
-    public List<ChallengeTotalCostResponse> getTotalCostPerChallengeUser(Long challengeId) {
+    public ChallengeTotalCostResponse getTotalCostPerChallengeUser(Long challengeId, Long userId) {
 
-        List<ChallengeTotalCostResponse> responseList = new ArrayList<>();
-        List<Object[]> totalCosts =  recordRepository.calculateTotalCostByUserId(challengeId);
-        for (Object[] obj: totalCosts){
-
-            ChallengeTotalCostResponse challengeTotalCostResponse = ChallengeTotalCostResponse.builder()
-                    .userId((Long) obj[0])
-                    .totalCost(((BigDecimal) obj[1]).intValue()) // BigInteger
-                    .build();
-            responseList.add(challengeTotalCostResponse);
+        User findUser = getUserOrThrow(userId);
+        checkIfUserInTheChallenge(userId, challengeId);
+        List<Object[]> obs =  recordRepository.calculateTotalCostByUserId(challengeId);
+        Integer cost = 0;
+        if(obs.size() != 0){
+            cost = ((BigDecimal) obs.get(0)[1]).intValue(); // BigInteger
         }
-
-        return responseList;
+        ChallengeTotalCostResponse response = ChallengeTotalCostResponse.builder()
+                .userId(userId)
+                .totalCost(cost)
+                .build();
+        return response;
     }
 
     // 챌린지 완료 (마지막날까지 성공)
@@ -310,7 +310,7 @@ public class ChallengeService {
     }
 
     // 챌린지 출석 확인
-    @Scheduled(cron="10 * * * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
     public void checkAttendance() {
         Integer check = 0;
         List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
@@ -377,5 +377,14 @@ public class ChallengeService {
             userList.add(c.getUser());
         }
         return userList;
+    }
+
+    // 특정 챌린지에 유저가 참여했는지 조회
+    private void checkIfUserInTheChallenge(Long userId, Long challengeId){
+
+        ChallengeUser cu = challengeUserRepository.findByChallengeIdAndUserId(challengeId, userId);
+        if(cu==null){
+            throw new CustomException(ErrorCode.USER_NOT_FOUND_IN_THE_CHALLENGE);
+        }
     }
 }
