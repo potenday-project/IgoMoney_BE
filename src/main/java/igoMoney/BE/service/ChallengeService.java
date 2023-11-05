@@ -310,7 +310,7 @@ public class ChallengeService {
     }
 
     // 챌린지 출석 확인
-    @Scheduled(cron="10 * * * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
     public void checkAttendance() {
         Integer check = 0;
         List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
