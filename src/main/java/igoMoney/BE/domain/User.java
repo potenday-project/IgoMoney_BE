@@ -105,11 +105,19 @@ public class User implements UserDetails {
         this.myChallengeId = myChallengeId;
     }
 
-    public void deleteBadge() { this.badgeCount -=1;}
+    public void deleteBadge() {
+        if(this.badgeCount >0 ){
+            this.badgeCount -=1;
+        }
+    }
     public void addBadge() { this.badgeCount +=1;}
     public void addChallengeCount() { this.challengeCount +=1;}
     public void addWinCount() { this.winCount +=1;}
-    public void subWinCount() { this.winCount -=1;}
+    public void subWinCount() {
+        if(this.winCount >0) {
+            this.winCount -= 1;
+        }
+    }
     public void addReportedCount() {this.reportedCount +=1; }
     public void resetReportedCount() { this.reportedCount = 0; }
     public void setBanned() { this.banned = true; }
