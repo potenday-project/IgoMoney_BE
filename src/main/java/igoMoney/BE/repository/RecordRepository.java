@@ -15,4 +15,6 @@ public interface RecordRepository extends JpaRepository<Record, Long> {
     List<Object[]> calculateTotalCostByUserId(@Param("challengeId") Long challengeId);
 
     List<Record> findAllByUserId(Long userId);
+    @Query(value="SELECT COUNT(*) FROM record r WHERE r.user_id= :userId AND r.date >= DATE_SUB(:date,INTERVAL 3 DAY)", nativeQuery = true)
+    Integer countByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 }

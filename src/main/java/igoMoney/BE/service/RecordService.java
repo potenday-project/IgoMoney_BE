@@ -150,8 +150,8 @@ public class RecordService {
         // 신고 알림
         Notification reportNotification = Notification.builder()
                 .user(offender)
-                .title("회원님의 챌린지 인증글이 신고되었습니다")
-                .message("신고 사유: "+reportReasons.get(request.getReason()))
+                .title("챌린지 현황")
+                .message(offender.getNickname()+"님 지출 내역은 가이드라인 위반으로 인해 삭제 되었어요. 신고 내용 확인 후 조치가 취해질 예정입니다. 신고 사유: "+reportReasons.get(request.getReason()))
                 .build();
         notificationRepository.save(reportNotification);
 
@@ -165,11 +165,11 @@ public class RecordService {
             // 신고 알림
             Notification banNotification = Notification.builder()
                     .user(offender)
-                    .title("신고가 누적되어 챌린지 참여가 제한됩니다")
-                    .message("제한 해제 날짜: " + offender.getBanReleaseDate().format(dateFormat))
+                    .title("챌린지 결과")
+                    .message(offender.getNickname()+"님은 신고 누적으로 진행중인 챌린지는 패배처리되고 일주일 동안 챌린지 참여가 제한됩니다. 제한 해제 날짜: " + offender.getBanReleaseDate().format(dateFormat))
                     .build();
             notificationRepository.save(banNotification);
-            challengeService.cancelChallenge(offender);
+            challengeService.cancelChallenge(offender, 2);
         }
         return userReport.getId();
     }
