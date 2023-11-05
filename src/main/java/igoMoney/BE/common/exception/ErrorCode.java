@@ -14,6 +14,7 @@ public enum ErrorCode {
     EXIST_USER_CHALLENGE(HttpStatus.CONFLICT, "이미 등록한 챌린지가 있거나 진행중인 챌린지가 있습니다."),
     USER_NOT_IN_CHALLENGE(HttpStatus.CONFLICT, "참여중인 챌린지가 없습니다."),
     PERMISSION_DENIED(HttpStatus.UNAUTHORIZED, "해당 챌린지에 인증글을 올릴 권한이 없습니다"),
+    USER_NOT_FOUND_IN_THE_CHALLENGE(HttpStatus.NOT_FOUND, "해당 사용자는 해당 챌린지에 참여하지 않았습니다."),
 
     // Token 예외
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
