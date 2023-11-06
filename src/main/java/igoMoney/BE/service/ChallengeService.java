@@ -36,10 +36,10 @@ public class ChallengeService {
     DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM월 dd일");
 
     // 시작 안 한 챌린지 목록 조회
-    public List<ChallengeResponse> getNotStartedChallengeList() {
+    public List<ChallengeResponse> getNotStartedChallengeList(Long lastId, int pageSize) {
 
         List<ChallengeResponse> responseList = new ArrayList<>();
-        List<Challenge> challengeList = challengeRepository.findAllByStartDateIsAfter(LocalDate.now());
+        List<Challenge> challengeList = challengeRepository.findAllNotStarted(pageSize, lastId, LocalDate.now());
         for (Challenge challenge: challengeList){
             ChallengeResponse challengeResponse = ChallengeResponse.builder()
                     .id(challenge.getId())
