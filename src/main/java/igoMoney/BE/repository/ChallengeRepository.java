@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
+public interface ChallengeRepository extends JpaRepository<Challenge, Long>, ChallengeCustomRepository {
 
     @Query("select c from Challenge c where c.startDate > :date")
     List<Challenge> findAllByStartDateIsAfter(@Param("date") LocalDate date);
