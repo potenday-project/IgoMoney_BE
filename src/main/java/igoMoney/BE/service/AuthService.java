@@ -255,13 +255,11 @@ public class AuthService {
         authHeader.forEach((s, o) -> System.out.println(s + " : " + o));
         kakaoClient.signOut(authHeader, request);
 
-        // User 정보 삭제
         deleteUser(userId);
     }
 
     // User 정보 삭제
     private void deleteUser(Long userId){
-//        User findUser = getUserOrThrow(userId);
         em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
         userRepository.deleteById(userId);
         em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();

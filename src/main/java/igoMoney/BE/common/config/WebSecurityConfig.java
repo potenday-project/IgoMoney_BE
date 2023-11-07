@@ -20,11 +20,9 @@ public class WebSecurityConfig {
     private static final String[] WHITE_LIST_URL = {
             "/auth/**"
     };
-//    private final CorsConfig corsConfig;
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-//    private final LogoutHandler logoutHandler;
-
+    private final JwtExceptionFilter jwtExceptionFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -36,10 +34,6 @@ public class WebSecurityConfig {
 
                 // 세션을 사용하지 않기 때문에 STATELESS로 설정
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-//                .exceptionHandling((exception)-> exception.authenticationEntryPoint(CustomAuthenticationEntryPoint
-//                    .accessDeniedHandler(CustomAccessDeniedHandler)))
-
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(WHITE_LIST_URL)
                                 .permitAll()
@@ -48,6 +42,7 @@ public class WebSecurityConfig {
                 )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class)
 //                .logout(logout ->
 //                        logout.logoutUrl("/auth/logout")
 //                                .addLogoutHandler(logoutHandler)
@@ -57,37 +52,10 @@ public class WebSecurityConfig {
 
     }
 
-//    private final AuthenticationEntryPoint unauthorizedEntryPoint =
-//            (request, response, authException) -> {
-//                ErrorResponse fail = ...; // Custom error response.
-//                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-//                String json = objectMapper.writeValueAsString(fail);
-//                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-//                PrintWriter writer = response.getWriter();
-//                writer.write(json);
-//                writer.flush();
-//            };
 
-//    // PasswordEncoder는 BCryptPasswordEncoder를 사용
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-//
-//    @Bean
-//    public AuthenticationManager authenticationManagerBean() throws Exception {
-//        return authenticationConfiguration.getAuthenticationManager();
-//    }
-//
-//    @Bean
-//    public JwtAuthorizationFilter jwtAuthorizationFilter() throws Exception {
-//        return new JwtAuthorizationFilter(authenticationManagerBean(), userRepository, jwtUtils, redisTemplate);
-//    }
 //
 //    @Bean
 //    public JwtExceptionFilter jwtExceptionFilter() {
 //        return new JwtExceptionFilter();
 //    }
-
-
 }
