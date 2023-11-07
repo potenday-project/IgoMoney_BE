@@ -1,9 +1,11 @@
 package igoMoney.BE.common.config;
 
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import igoMoney.BE.common.jwt.JwtUtils;
 import igoMoney.BE.domain.User;
 import igoMoney.BE.repository.UserRepository;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,14 +44,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
+        Long userId;
+        Map<String, Claim> claims;
         if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
         jwt = authHeader.substring(7);
-        Long userId = jwtUtils.getUserIdFromToken(jwt);
-        Map<String, Claim> claims = jwtUtils.getClaimsFromToken(jwt);
-
+        try {
+            userId = jwtUtils.getUserIdFromToken(jwt);
+            claims = jwtUtils.getClaimsFromToken(jwt);
+        } catch (TokenExpiredException e){
+            logger.warn("Token is expired and not valid anymore", e);
+            throw new JwtException("토큰 기한 만료");
+        }
 
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(String.valueOf(userId));

@@ -1,5 +1,7 @@
 package igoMoney.BE.common.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -12,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ErrorResponse {
 
-    private final LocalDateTime timestamp = LocalDateTime.now();
+    private  LocalDateTime timestamp = LocalDateTime.now();
     private final int status;
     private final String error;
     private final String code;
@@ -57,4 +59,11 @@ public class ErrorResponse {
                                 .build()
                 );
     }
+
+    public String convertToJson() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return  mapper.writeValueAsString(this);
+    }
+
+    public void setDateNull(){ this.timestamp = null;}
 }
