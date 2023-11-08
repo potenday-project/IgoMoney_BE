@@ -39,3 +39,4 @@ out/
 ### classpath ###
 application.properties
 p8_key.txt
+firebase

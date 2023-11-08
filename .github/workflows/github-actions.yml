@@ -37,7 +37,14 @@ jobs:
         echo "${{ secrets.PROPERTIES }}" >> ./application.properties
       shell: bash
 
-
+      # 환경 변수 설정 (Firebase)
+    - name: create-json
+      id: create-json
+      uses: jsdaniell/create-json@v1.2.2
+      with:
+        name: ${{ secrets.FIREBASE_JSON_FILENAME }}
+        json: ${{ secrets.FIREBASE_JSON }}
+        dir: 'src/main/resources/firebase/'
         
     - name: Build with Gradle
       run: |
