@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -75,9 +74,11 @@ public class ChallengeController {
 
     // 챌린지의 각 사용자별 누적금액 조회
     @GetMapping("total-cost")
-    public ResponseEntity<ChallengeTotalCostResponse> getTotalCostPerChallengeUser(@RequestBody Map<String, Long> request) {
+    public ResponseEntity<ChallengeTotalCostResponse> getTotalCostPerChallengeUser(
+            @RequestParam(value="challengeId") Long challengeId,
+            @RequestParam(value="userId") Long userId) {
 
-        ChallengeTotalCostResponse response = challengeService.getTotalCostPerChallengeUser(request.get("challengeId"), request.get("userId"));
+        ChallengeTotalCostResponse response = challengeService.getTotalCostPerChallengeUser(challengeId, userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
