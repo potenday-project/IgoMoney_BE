@@ -88,6 +88,7 @@ dependencies {
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
 	implementation 'com.google.firebase:firebase-admin:9.1.1'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 // Querydsl 설정부

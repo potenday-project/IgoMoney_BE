@@ -80,6 +80,10 @@ spring:
           apple:
             authorizationUri: https://appleid.apple.com/auth/authorize?response_mode=form_post
             tokenUri: https://appleid.apple.com/auth/token
+  data:
+    redis:
+      port: ${spring.data.redis.port}
+      host: ${spring.data.redis.host}
 
 jwt:
   secret: ${application.jwt.secret}
