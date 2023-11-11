@@ -13,4 +13,5 @@ public class TokenDto { // 서버 자체 토큰
     private String refreshToken;
     private String provider_accessToken;
     private Long userId;
+    private String fcmToken;
 }

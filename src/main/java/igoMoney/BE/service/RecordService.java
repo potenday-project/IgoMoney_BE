@@ -32,7 +32,7 @@ public class RecordService {
     private final UserRepository userRepository;
     private final ChallengeRepository challengeRepository;
     private final UserReportRepository userReportRepository;
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
     private final ImageService imageService;
     private final ChallengeService challengeService;
 
@@ -153,7 +153,7 @@ public class RecordService {
                 .title("챌린지 현황")
                 .message(offender.getNickname()+"님 지출 내역은 가이드라인 위반으로 인해 삭제 되었어요. 신고 내용 확인 후 조치가 취해질 예정입니다. 신고 사유: "+reportReasons.get(request.getReason()))
                 .build();
-        notificationRepository.save(reportNotification);
+        notificationService.makeNotification(reportNotification);
 
         // hide record
         Record record = getRecordOrThrow(request.getRecordId());
@@ -168,7 +168,7 @@ public class RecordService {
                     .title("챌린지 결과")
                     .message(offender.getNickname()+"님은 신고 누적으로 진행중인 챌린지는 패배처리되고 일주일 동안 챌린지 참여가 제한됩니다. 제한 해제 날짜: " + offender.getBanReleaseDate().format(dateFormat))
                     .build();
-            notificationRepository.save(banNotification);
+            notificationService.makeNotification(banNotification);
             challengeService.cancelChallenge(offender, 2);
         }
         return userReport.getId();

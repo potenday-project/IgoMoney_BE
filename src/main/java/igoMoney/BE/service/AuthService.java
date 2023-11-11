@@ -169,7 +169,7 @@ public class AuthService {
             String id = element.getAsJsonObject().get("id").getAsString(); // 카카오 회원번호
             String email = "";
             String image = "";
-            //String nickname = "";
+            //String nickname = ""
             email = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("email").getAsString();
             image = element.getAsJsonObject().get("properties").getAsJsonObject().get("profile_image").getAsString();
             //nickname = element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("profile").getAsJsonObject().get("nickname").getAsString();

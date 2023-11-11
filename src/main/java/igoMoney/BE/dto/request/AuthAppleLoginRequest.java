@@ -1,15 +1,19 @@
 package igoMoney.BE.dto.request;
 
-//import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
 public class AuthAppleLoginRequest {
 
-    private String id;
-    private String email;
-    private String nickname;
-    private String picture	;
+    private String state;
     private String code;
+    private String id_token;
+    private String user;
+    private String refresh_token;
+    private Long userId;
+    private String FCMToken;
 }

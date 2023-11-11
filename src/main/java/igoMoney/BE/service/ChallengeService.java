@@ -32,7 +32,7 @@ public class ChallengeService {
     private final UserRepository userRepository;
     private final RecordRepository recordRepository;
     private final ChallengeUserRepository challengeUserRepository;
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
     DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM월 dd일");
 
     // 시작 안 한 챌린지 목록 조회
@@ -148,7 +148,7 @@ public class ChallengeService {
                 .title("챌린지 현황")
                 .message(findChallenge.getStartDate().format(dateFormat)+"부터 "+findUser.getNickname()+"님과 챌린지 시작")
                 .build();
-        notificationRepository.save(notification);
+        notificationService.makeNotification(notification);
 
     }
 
@@ -200,7 +200,7 @@ public class ChallengeService {
                     .title("챌린지 결과")
                     .message("상대방 "+ user.getNickname() +"님이 챌린지를 포기했어요.")
                     .build();
-            notificationRepository.save(notification);
+            notificationService.makeNotification(notification);
         }
         else if (sel==1){
             Notification notification = Notification.builder()
@@ -208,7 +208,7 @@ public class ChallengeService {
                     .title("챌린지 결과")
                     .message(user2.getNickname()+"님! 상대방 "+ user.getNickname() +"님이 3일 연속 미출석으로 패배하셨어요.")
                     .build();
-            notificationRepository.save(notification);
+            notificationService.makeNotification(notification);
         }
         else if (sel==2){
             Notification notification = Notification.builder()
@@ -216,7 +216,7 @@ public class ChallengeService {
                     .title("챌린지 결과")
                     .message(user2.getNickname()+"님! 상대방 "+ user.getNickname() +"님이 신고 누적으로 패배하셨어요.")
                     .build();
-            notificationRepository.save(notification);
+            notificationService.makeNotification(notification);
         }
     }
 
@@ -292,14 +292,14 @@ public class ChallengeService {
                                 .title("챌린지 결과")
                                 .message(u.getNickname()+"님! "+lose.getNickname()+"님과의 챌린지 대결에서 승리하셔서 뱃지를 획득하게 되었어요. \uD83E\uDD47") // 🥇
                                 .build();
-                        notificationRepository.save(notification);
+                        notificationService.makeNotification(notification);
                     } else{
                         Notification notification = Notification.builder()
                                 .user(u)
                                 .title("챌린지 결과")
                                 .message(u.getNickname()+"님! "+findWinner.getNickname()+"님과의 챌린지 대결에서 아쉽게 승리하지 못했어요. 새로운 챌린지를 도전해보세요. \uD83D\uDE25") //😥
                                 .build();
-                        notificationRepository.save(notification);
+                        notificationService.makeNotification(notification);
                     }
 
                 }
@@ -326,7 +326,7 @@ public class ChallengeService {
                                 .title("챌린지 결과")
                                 .message(u.getNickname()+"님! 지출내역을 3일 동안 인증하지 않아서 해당 챌린지에서 패배하셨어요.")
                                 .build();
-                        notificationRepository.save(absentNotification);
+                        notificationService.makeNotification(absentNotification);
                         if(check==1){ // 유저 둘 다 미출석
                             u.deleteBadge();
                             u.deleteBadge();

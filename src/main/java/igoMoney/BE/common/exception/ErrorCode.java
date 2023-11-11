@@ -25,6 +25,7 @@ public enum ErrorCode {
     ID_TOKEN_INVALID_4(HttpStatus.UNAUTHORIZED, "ID토큰이 유효하지 않습니다.(서명 검증 결과)"),
     ID_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "ID토큰이 만료되었습니다."),
     AUTH_CODE_INVALID(HttpStatus.UNAUTHORIZED, "Authorization Code가 유효하지 않습니다."),
+    FCM_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "FCM토큰이 null입니다."),
 
     // login 예외
     LOGIN_CONNECTION_ERROR(HttpStatus.BAD_REQUEST, "로그인 요청 오류"),

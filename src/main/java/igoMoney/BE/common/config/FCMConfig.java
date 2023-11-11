@@ -20,7 +20,7 @@ public class FCMConfig {
     private String firebaseJsonFileName;
 
     @Bean
-    FirebaseMessaging firebaseMessaging() throws IOException {
+    FirebaseMessaging init() throws IOException {
         ClassPathResource resource = new ClassPathResource("firebase/"+firebaseJsonFileName+".json");
         InputStream refreshToken = resource.getInputStream();
         FirebaseApp firebaseApp = null;
