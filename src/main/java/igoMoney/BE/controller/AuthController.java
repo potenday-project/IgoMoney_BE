@@ -1,15 +1,14 @@
 package igoMoney.BE.controller;
 
+import igoMoney.BE.common.exception.CustomException;
+import igoMoney.BE.common.exception.ErrorCode;
 import igoMoney.BE.common.jwt.AppleJwtUtils;
 import igoMoney.BE.common.jwt.dto.AppleSignOutRequest;
 import igoMoney.BE.common.jwt.dto.AppleTokenResponse;
 import igoMoney.BE.common.jwt.dto.TokenDto;
-import igoMoney.BE.dto.request.FromAppleService;
+import igoMoney.BE.dto.request.AuthAppleLoginRequest;
 import igoMoney.BE.dto.response.AuthRecreateTokenResponse;
-import igoMoney.BE.service.AuthService;
-import igoMoney.BE.service.ChallengeService;
-import igoMoney.BE.service.RecordService;
-import igoMoney.BE.service.RefreshTokenService;
+import igoMoney.BE.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,14 +32,17 @@ public class AuthController {
     private final RecordService recordService;
     private final AppleJwtUtils appleJwtUtils;
     private final RefreshTokenService refreshTokenService;
+    private final FCMTokenService fcmTokenService;
 
     // 카카오 로그인
     @PostMapping("login/kakao")
     @ResponseBody
-    public ResponseEntity<TokenDto> kakaoLogin(@RequestBody TokenDto accessToken) throws IOException {
+    public ResponseEntity<TokenDto> kakaoLogin(@RequestBody TokenDto token) throws IOException {
 
-        TokenDto response = authService.kakaoLogin(accessToken.getAccessToken());
+        checkFCMToken(token.getFcmToken());
+        TokenDto response = authService.kakaoLogin(token.getAccessToken());
         refreshTokenService.saveRefreshToken(response);
+        fcmTokenService.saveToken(response.getUserId(), token.getFcmToken());
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -75,16 +77,18 @@ public class AuthController {
     // 2. 로그인 후 Identity Token, AuthorizationCode 받기
     @PostMapping("login/apple/redirect")
     @ResponseBody
-    public ResponseEntity<TokenDto> getAppleUserIdToken(@RequestBody FromAppleService fromAppleService) throws Exception {
+    public ResponseEntity<TokenDto> getAppleUserIdToken(@RequestBody AuthAppleLoginRequest authAppleLoginRequest) throws Exception {
 
+        checkFCMToken(authAppleLoginRequest.getFCMToken());
         // 3. public key 요청하기 (n, e 값 받고 키 생성)
         // 4. Identity Token (JWT) 검증하기
         // 5. ID토큰 payload 바탕으로 회원가입
-        List<String> subNemail = appleJwtUtils.checkIdToken(fromAppleService.getId_token());
+        List<String> subNemail = appleJwtUtils.checkIdToken(authAppleLoginRequest.getId_token());
         // DB에 data에서 받아온 정보를 가진 사용자가 있는지 조회 & 회원가입
         // 6. 서버에서 직접 JWT 토큰 발급하기 (access & refresh token)
         TokenDto response =  authService.AppleSignUp(subNemail); // sub, email
         refreshTokenService.saveRefreshToken(response);
+        fcmTokenService.saveToken(response.getUserId(), authAppleLoginRequest.getFCMToken());
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -92,7 +96,7 @@ public class AuthController {
     // [애플]  회원탈퇴
     @PostMapping("signout/apple")
     @ResponseBody
-    public ResponseEntity<Void> appleSignOut(@RequestBody FromAppleService request) throws IOException {
+    public ResponseEntity<Void> appleSignOut(@RequestBody AuthAppleLoginRequest request) throws IOException {
 
         // 챌린지 중단 및 패배처리
         challengeService.giveUpChallengeSignOut(request.getUserId());
@@ -111,6 +115,7 @@ public class AuthController {
                 .token(response.getRefresh_token())
                 .build();
         authService.appleSignOut(appleRequest);
+        fcmTokenService.deleteToken(request.getUserId());
 
         return new ResponseEntity(HttpStatus.OK);
     }
@@ -126,6 +131,7 @@ public class AuthController {
         recordService.deleteAllUserRecords(userId);
         // 카카오 연동해제 및 회원정보(User) 삭제
         authService.kakaoSignOut(userId);
+        fcmTokenService.deleteToken(userId);
 
         return new ResponseEntity(HttpStatus.OK);
     }
@@ -145,7 +151,14 @@ public class AuthController {
 //    public ResponseEntity<Void> logout(@RequestBody Map<String, String> accessToken) {
 //
 //        authService.logout(accessToken.get("accessToken"));
+//        fcmService.deleteToken(userId);
 //
 //        return new ResponseEntity(HttpStatus.OK);
 //    }
+
+    public void checkFCMToken(String fcmToken){
+        if(fcmToken == null){
+            throw new CustomException(ErrorCode.FCM_TOKEN_INVALID);
+        }
+    }
 }
