@@ -44,7 +44,7 @@ jobs:
       with:
         name: ${{ secrets.FIREBASE_JSON_FILENAME }}
         json: ${{ secrets.FIREBASE_JSON }}
-        dir: 'src/main/resources/firebase/'
+        dir: 'src/main/resources'
         
     - name: Build with Gradle
       run: |
