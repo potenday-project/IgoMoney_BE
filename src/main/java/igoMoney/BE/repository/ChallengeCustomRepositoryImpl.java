@@ -20,8 +20,19 @@ public class ChallengeCustomRepositoryImpl implements ChallengeCustomRepository 
     @Override
     public List<Challenge> findAllNotStarted(int pageSize, Long lastId, LocalDate date){
         return jpaQueryFactory.selectFrom(challenge)
-                .where(ltChallengeId(lastId),
-                        challenge.startDate.gt(date))
+                .where(challenge.startDate.gt(date),
+                        ltChallengeId(lastId))
+                .orderBy(challenge.id.desc())
+                .limit(pageSize)
+                .fetch();
+    }
+
+    @Override
+    public List<Challenge> findAllNotStartedByCategory(int pageSize, Long lastId, LocalDate date, Integer categoryId){
+        return jpaQueryFactory.selectFrom(challenge)
+                .where( challenge.categoryId.eq(categoryId),
+                        challenge.startDate.gt(date),
+                        ltChallengeId(lastId))
                 .orderBy(challenge.id.desc())
                 .limit(pageSize)
                 .fetch();
