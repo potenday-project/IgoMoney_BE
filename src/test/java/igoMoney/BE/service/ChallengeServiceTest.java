@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -33,24 +34,25 @@ public class ChallengeServiceTest {
                     .content("__")
                     .targetAmount(10000)
                     .startDate(LocalDate.now().plusDays(2))
+                    .categoryId(1)
                     .build());
         }
 
         //when
         List<Challenge> challenges = challengeRepository.findAllNotStarted(10, null, LocalDate.now()); // pageNo는 0부터 시작이라 1이면 두번째 페이지 조회
+        List<Challenge> challenges2 = challengeRepository.findAllNotStarted(10, 21L, LocalDate.now()); // DESC. 20~11
+        List<Challenge> challenges3 = challengeRepository.findAllNotStartedByCategory(10, 21L, LocalDate.now(), 2);
 
         //then
         assertEquals(challenges.size(),10);
         assertEquals(30,(long) challenges.get(0).getId());
         assertEquals(21, (long) challenges.get(9).getId());
 
-        // [NoOffset 2번째 페이지]
-//        //when
-//        List<Challenge> challenges = challengeRepository.findAllNotStarted(10, 21L); // DESC. 20~11
-//
-//        //then
-//        assertThat(challenges).hasSize(10);
-//        assertThat(challenges.get(0).getId()).isEqualTo(20);
-//        assertThat(challenges.get(9).getId()).isEqualTo(11);
+        assertThat(challenges2).hasSize(10);
+        assertThat(challenges2.get(0).getId()).isEqualTo(20);
+        assertThat(challenges2.get(9).getId()).isEqualTo(11);
+
+        assertThat(challenges3).hasSize(0);
+
     }
 }

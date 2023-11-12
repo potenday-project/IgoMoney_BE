@@ -26,9 +26,10 @@ public class ChallengeController {
     @GetMapping("notstarted")
     public ResponseEntity<List<ChallengeResponse>> getNotStartedChallengeList(
             @RequestParam(value="lastId", required=false, defaultValue="10") Long lastId,
-            @RequestParam(value="pageSize", required=false, defaultValue="10") int pageSize) {
+            @RequestParam(value="pageSize", required=false, defaultValue="10") int pageSize,
+            @RequestParam(value="categoryId", required=false, defaultValue="-1") Integer categoryId) {
 
-        List<ChallengeResponse> response = challengeService.getNotStartedChallengeList(lastId, pageSize);
+        List<ChallengeResponse> response = challengeService.getNotStartedChallengeList(lastId, pageSize, categoryId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

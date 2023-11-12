@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ChallengeCustomRepository {
     List<Challenge> findAllNotStarted(int pageSize, Long lastId, LocalDate date);
+    List<Challenge> findAllNotStartedByCategory(int pageSize, Long lastId, LocalDate date, Integer categoryId);
 }
