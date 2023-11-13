@@ -15,5 +15,5 @@ public class AuthAppleLoginRequest {
     private String user;
     private String refresh_token;
     private Long userId;
-    private String FCMToken;
+    private String fcmToken;
 }
