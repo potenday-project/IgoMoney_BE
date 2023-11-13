@@ -32,7 +32,7 @@ public class FCMTokenService {
     }
 
     private String getToken(Long userId) {
-        return tokenRedisTemplate.opsForValue().get(userId);
+        return tokenRedisTemplate.opsForValue().get(String.valueOf(userId));
     }
 
     public void deleteToken(Long userId) {
