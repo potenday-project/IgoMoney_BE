@@ -79,7 +79,7 @@ public class AuthController {
     @ResponseBody
     public ResponseEntity<TokenDto> getAppleUserIdToken(@RequestBody AuthAppleLoginRequest authAppleLoginRequest) throws Exception {
 
-        checkFCMToken(authAppleLoginRequest.getFCMToken());
+        checkFCMToken(authAppleLoginRequest.getFcmToken());
         // 3. public key 요청하기 (n, e 값 받고 키 생성)
         // 4. Identity Token (JWT) 검증하기
         // 5. ID토큰 payload 바탕으로 회원가입
@@ -88,7 +88,7 @@ public class AuthController {
         // 6. 서버에서 직접 JWT 토큰 발급하기 (access & refresh token)
         TokenDto response =  authService.AppleSignUp(subNemail); // sub, email
         refreshTokenService.saveRefreshToken(response);
-        fcmTokenService.saveToken(response.getUserId(), authAppleLoginRequest.getFCMToken());
+        fcmTokenService.saveToken(response.getUserId(), authAppleLoginRequest.getFcmToken());
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
