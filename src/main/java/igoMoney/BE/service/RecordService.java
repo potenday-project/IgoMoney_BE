@@ -43,7 +43,7 @@ public class RecordService {
     public Long saveRecord (RecordSaveRequest request) throws IOException {
 
         User findUser = getUserOrThrow(request.getUserId());
-        Challenge challenge = getChallengeOrThrow(request.getUserId());
+        Challenge challenge = getChallengeOrThrow(request.getChallengeId());
         checkPermission(findUser, request.getChallengeId());
 
         checkExistsImage(request.getImage());
