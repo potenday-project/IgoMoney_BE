@@ -46,8 +46,7 @@ public class RecordService {
         Challenge challenge = getChallengeOrThrow(request.getChallengeId());
         checkPermission(findUser, request.getChallengeId());
 
-        checkExistsImage(request.getImage());
-        String image = imageService.uploadImage(request.getImage());
+        List<Image> image = multipartFilesToUUIDStrings(request.getImage());
         Record record = Record.builder()
                 .challenge(challenge)
                 .user(findUser)
@@ -67,47 +66,18 @@ public class RecordService {
     public RecordResponse getRecord(Long recordId) {
 
         Record record = getRecordOrThrow(recordId);
-
-        String imageUrl = imageService.processImage(record.getImage());
-        RecordResponse response = RecordResponse.builder()
-                .recordId(record.getId())
-                .challengeId(record.getChallenge().getId())
-                .userId(record.getUser().getId())
-                .title(record.getTitle())
-                .content(record.getContent())
-                .cost(record.getCost())
-                .image(imageUrl)
-                .date(record.getDate())
-                .hide(record.getHide())
-                .build();
-
-        return response;
+        return recordToRecordResponse(record);
     }
-
 
     // 사용자의 그날의 모든 record 조회
     public List<RecordResponse> getUserDailyRecordList(Long userId, LocalDate date) {
 
-        List<RecordResponse> responseList = new ArrayList<>();
-        List<Record> recordList = recordRepository.findAllByUserIdAndDate(userId, date);
-        for (Record record: recordList){
-            String image = imageService.processImage(record.getImage());
-            RecordResponse recordResponse = RecordResponse.builder()
-                    .recordId(record.getId())
-                    .challengeId(record.getChallenge().getId())
-                    .userId(record.getUser().getId())
-                    .title(record.getTitle())
-                    .content(record.getContent())
-                    .cost(record.getCost())
-                    .image(image)
-                    .date(record.getDate())
-                    .hide(record.getHide())
-                    .build();
-
-            responseList.add(recordResponse);
+        List<RecordResponse> responses = new ArrayList<>();
+        List<Record> records = recordRepository.findAllByUserIdAndDate(userId, date);
+        for (Record record: records){
+            responses.add(recordToRecordResponse(record));
         }
-
-        return responseList;
+        return responses;
     }
 
     // 사용자의 모든 record 삭제 (회원탈퇴 시)
@@ -130,9 +100,8 @@ public class RecordService {
     public void updateRecord(RecordUpdateRequest request) throws IOException {
 
         Record findRecord = getRecordOrThrow(request.getRecordId());
-        checkExistsImage(request.getImage());
-        String image = imageService.uploadImage(request.getImage());
-        findRecord.updateRecord(request.getTitle(), request.getContent(), request.getCost(), image);
+        List<Image> imageUUIDs = multipartFilesToUUIDStrings(request.getImage());
+        findRecord.updateRecord(request.getTitle(), request.getContent(), request.getCost(), imageUUIDs);
     }
 
     public Long reportRecord(RecordReportRequest request) {
@@ -203,6 +172,36 @@ public class RecordService {
         }
     }
 
+    private List<Image> multipartFilesToUUIDStrings(List<MultipartFile> multipartFiles) throws IOException {
+
+        if ((multipartFiles == null) || multipartFiles.isEmpty()) {
+            throw new CustomException(ErrorCode.SHOULD_EXIST_IMAGE);
+        }
+        List<Image> uuids = new ArrayList<>();
+        for (MultipartFile m : multipartFiles){
+            checkExistsImage(m);
+            uuids.add(Image.builder().uuid(imageService.uploadImage(m)).build());
+        }
+        return uuids;
+    }
+
+    private RecordResponse recordToRecordResponse(Record record) {
+        List<String> imageUrls = new ArrayList<>();
+        for (Image i : record.getImage()){
+            imageUrls.add(imageService.processImage(i.getUuid()));
+        }
+        return RecordResponse.builder()
+                .recordId(record.getId())
+                .challengeId(record.getChallenge().getId())
+                .userId(record.getUser().getId())
+                .title(record.getTitle())
+                .content(record.getContent())
+                .cost(record.getCost())
+                .image(imageUrls)
+                .date(record.getDate())
+                .hide(record.getHide())
+                .build();
+    }
 
     // 예외 처리 - 이미지 존재여부
     private void checkExistsImage(MultipartFile image) {

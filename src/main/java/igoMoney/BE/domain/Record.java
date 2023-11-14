@@ -2,9 +2,14 @@ package igoMoney.BE.domain;
 
 import igoMoney.BE.common.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -31,19 +36,31 @@ public class Record extends BaseEntity {
     @Column(nullable = false)
     private String content;
     private Integer cost;
-    private String image;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "record_id")
+    @Builder.Default
+    private List<Image> image = new ArrayList<Image>();
+
     @Column(nullable = false)
     private LocalDate date;
     @Column(nullable = false)
     @Builder.Default
     private Boolean hide = false; // 신고당했을 때 가림
 
-    public void updateRecord(String title, String content, Integer cost, String image){
+    public void updateRecord(String title, String content, Integer cost, List<Image> image){
         this.title = title;
         this.content = content;
         this.cost = cost;
-        this.image = image;
+        setImage(image);
     }
 
     public void setHidden() { this.hide = true; }
+
+    public void setImage(List<Image> aList){
+        this.image.clear();
+        if (aList != null){
+            this.image.addAll(aList);
+        }
+    }
 }
