@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,5 +21,5 @@ public class RecordUpdateRequest {
     @Size(max=300)
     private String content;
     private Integer cost;
-    private MultipartFile image;
+    private List<MultipartFile> image;
 }
