@@ -1,6 +1,7 @@
 package igoMoney.BE.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -32,6 +33,12 @@ public class CustomExceptionHandler {
 
         log.info(fieldError.toString());
         return ErrorResponse.toResponseEntity(HttpStatus.BAD_REQUEST, fieldError);
+    }
+
+    @ExceptionHandler(FileSizeLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleSizeLimitExceededException(FileSizeLimitExceededException ex) {
+        log.info("SizeLimitExceededException :: " + ex.getLocalizedMessage());
+        return ErrorResponse.toResponseEntity(new CustomException(ErrorCode.IMAGE_SIZE_EXCEEDED));
     }
 }
 

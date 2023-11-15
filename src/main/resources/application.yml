@@ -35,6 +35,10 @@ spring:
       stack:
         auto : false
 
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 10MB
 
   security:
     oauth2:
