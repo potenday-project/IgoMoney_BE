@@ -40,7 +40,8 @@ public enum ErrorCode {
     NOT_FOUND_NOTIFICATION(HttpStatus.NOT_FOUND, "해당 Notification을 찾을 수 없습니다."),
 
     // 이미지 예외
-    SHOULD_EXIST_IMAGE(HttpStatus.BAD_REQUEST, "이미지가 존재하지 않습니다.");
+    SHOULD_EXIST_IMAGE(HttpStatus.BAD_REQUEST, "이미지가 존재하지 않습니다."),
+    IMAGE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지 파일이 너무 큽니다.");
 
 
     private final HttpStatus httpStatus;
