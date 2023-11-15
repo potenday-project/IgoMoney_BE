@@ -13,4 +13,5 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long>, Cha
     @Query("select c from Challenge c where c.startDate > :date")
     List<Challenge> findAllByStartDateIsAfter(@Param("date") LocalDate date);
     List<Challenge> findAllByStatus(String status);
+    List<Challenge> findAllByEndDateAndStatus(LocalDate date, String status);
 }

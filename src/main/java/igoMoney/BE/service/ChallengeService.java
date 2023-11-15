@@ -151,7 +151,7 @@ public class ChallengeService {
         Notification notification = Notification.builder()
                 .user(user2)
                 .title("챌린지 현황")
-                .message(findChallenge.getStartDate().format(dateFormat)+"부터 "+findUser.getNickname()+"님과 챌린지 시작")
+                .message(user2.getNickname()+"님! "+findUser.getNickname()+"님과 챌린지가 "+findChallenge.getStartDate().format(dateFormat)+"부터 시작되어요. 챌린지 시작 전에 지출 계획을 세워보세요!")
                 .build();
         notificationService.makeNotification(notification);
 
@@ -289,24 +289,6 @@ public class ChallengeService {
                     // 유저 : 챌린지 종료로 설정
                     u.updateUserStatus(false, null);
                     u.resetReportedCount();
-
-                    if (u.getId().equals(winnerId)) {
-                        // 챌린지 승리자
-                        Notification notification = Notification.builder()
-                                .user(u)
-                                .title("챌린지 결과")
-                                .message(u.getNickname()+"님! "+lose.getNickname()+"님과의 챌린지 대결에서 승리하셔서 뱃지를 획득하게 되었어요. \uD83E\uDD47") // 🥇
-                                .build();
-                        notificationService.makeNotification(notification);
-                    } else{
-                        Notification notification = Notification.builder()
-                                .user(u)
-                                .title("챌린지 결과")
-                                .message(u.getNickname()+"님! "+findWinner.getNickname()+"님과의 챌린지 대결에서 아쉽게 승리하지 못했어요. 새로운 챌린지를 도전해보세요. \uD83D\uDE25") //😥
-                                .build();
-                        notificationService.makeNotification(notification);
-                    }
-
                 }
             }
         }
@@ -342,6 +324,58 @@ public class ChallengeService {
                         cancelChallenge(u, 1);
                         check = 1;
                     }
+                }
+            }
+
+        }
+    }
+
+    @Scheduled(cron="0 0 21 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    public void remindRecordAlarm(){
+        List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
+        for (Challenge c : challenges){
+            List<User> users = getAllChallengeUser(c.getId());
+            for (User u : users){
+                if(!recordRepository.existsByUserIdAndDate(u.getId(), LocalDate.now())){
+                    Notification remindRecordNotification = Notification.builder()
+                            .user(u)
+                            .title("챌린지 현황")
+                            .message(u.getNickname()+"님! 오늘 지출 내역을 인증하지 않으셨어요. 오늘의 지출 내역을 인증해주세요.")
+                            .build();
+                    notificationService.makeNotification(remindRecordNotification);
+                }
+            }
+        }
+    }
+
+    @Scheduled(cron="0 0 9 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    public void challengeResultAlarm(){
+        List<Challenge> challenges = challengeRepository.findAllByEndDateAndStatus(LocalDate.now(), "done");
+        for (Challenge c : challenges){
+            List<User> users = getAllChallengeUser(c.getId());
+            for(User u: users){
+                User otherUser = getChallengeOtherUser(c.getId(), u.getId());
+                if(c.getWinnerId() == -1L){
+                    Notification notification = Notification.builder()
+                            .user(u)
+                            .title("챌린지 결과")
+                            .message(u.getNickname()+"님! "+otherUser.getNickname()+"님과의 챌린지 대결에서 무승부가 되어 두 분 다 뱃지를 획득하게 되었어요. 새로운 챌린지를 도전해보세요.")
+                            .build();
+                    notificationService.makeNotification(notification);
+                } else if(u.getId() == c.getWinnerId()){
+                    Notification notification = Notification.builder()
+                            .user(u)
+                            .title("챌린지 결과")
+                            .message(u.getNickname()+"님! "+otherUser.getNickname()+"님과의 챌린지 대결에서 승리하셔서 뱃지를 획득하게 되었어요. \uD83E\uDD47") // 🥇
+                            .build();
+                    notificationService.makeNotification(notification);
+                } else {
+                    Notification notification = Notification.builder()
+                            .user(u)
+                            .title("챌린지 결과")
+                            .message(u.getNickname()+"님! "+otherUser.getNickname()+"님과의 챌린지 대결에서 아쉽게 승리하지 못했어요. 새로운 챌린지를 도전해보세요. \uD83D\uDE25") //😥
+                            .build();
+                    notificationService.makeNotification(notification);
                 }
             }
 
