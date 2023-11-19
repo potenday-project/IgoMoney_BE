@@ -230,9 +230,9 @@ public class ChallengeService {
 
         User findUser = getUserOrThrow(userId);
         checkIfUserInTheChallenge(userId, challengeId);
-        List<Object[]> obs =  recordRepository.calculateTotalCostByUserId(challengeId);
+        List<Object[]> obs =  recordRepository.calculateTotalCostByUserId(challengeId, userId);
         Integer cost = 0;
-        if(obs.size() != 0){
+        if(obs.size() != 0 && obs.get(0)[1]!=null){
             cost = ((BigDecimal) obs.get(0)[1]).intValue(); // BigInteger
         }
         ChallengeTotalCostResponse response = ChallengeTotalCostResponse.builder()
@@ -257,7 +257,7 @@ public class ChallengeService {
                 c.finishChallenge();
 
                 // 챌린지 승자 결정
-                List<Object[]> totalCosts =  recordRepository.calculateTotalCostByUserId(c.getId());
+                List<Object[]> totalCosts =  recordRepository.calculateTotalCostByChallengeId(c.getId());
                 for (Object[] obj: totalCosts){
                     if(((BigDecimal) obj[1]).intValue() == minCost){
                         check = true;
