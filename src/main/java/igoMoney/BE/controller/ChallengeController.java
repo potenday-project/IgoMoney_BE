@@ -27,9 +27,10 @@ public class ChallengeController {
     public ResponseEntity<List<ChallengeResponse>> getNotStartedChallengeList(
             @RequestParam(value="lastId", required=false, defaultValue="10") Long lastId,
             @RequestParam(value="pageSize", required=false, defaultValue="10") int pageSize,
-            @RequestParam(value="categoryId", required=false, defaultValue="-1") Integer categoryId) {
+            @RequestParam(value="categoryId", required=false, defaultValue="-1") Integer categoryId,
+            @RequestParam(value="targetAmount", required=false, defaultValue="-1") Integer targetAmount) {
 
-        List<ChallengeResponse> response = challengeService.getNotStartedChallengeList(lastId, pageSize, categoryId);
+        List<ChallengeResponse> response = challengeService.getNotStartedChallengeList(lastId, pageSize, categoryId, targetAmount);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
