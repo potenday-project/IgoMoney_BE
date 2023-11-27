@@ -38,6 +38,29 @@ public class ChallengeCustomRepositoryImpl implements ChallengeCustomRepository 
                 .fetch();
     }
 
+    @Override
+    public List<Challenge> findAllNotStartedByTargetAmount(int pageSize, Long lastId, LocalDate date, Integer targetAmount){
+        return jpaQueryFactory.selectFrom(challenge)
+                .where( challenge.targetAmount.eq(targetAmount),
+                        challenge.startDate.gt(date),
+                        ltChallengeId(lastId))
+                .orderBy(challenge.id.desc())
+                .limit(pageSize)
+                .fetch();
+    }
+
+    @Override
+    public List<Challenge> findAllNotStartedByCategoryAndTargetAmount(int pageSize, Long lastId, LocalDate date, Integer categoryId, Integer targetAmount){
+        return jpaQueryFactory.selectFrom(challenge)
+                .where( challenge.categoryId.eq(categoryId),
+                        challenge.targetAmount.eq(targetAmount),
+                        challenge.startDate.gt(date),
+                        ltChallengeId(lastId))
+                .orderBy(challenge.id.desc())
+                .limit(pageSize)
+                .fetch();
+    }
+
     private BooleanExpression ltChallengeId(Long lastId) {
 
         if (lastId == null) {

@@ -36,14 +36,23 @@ public class ChallengeService {
     DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM월 dd일");
 
     // 시작 안 한 챌린지 목록 조회
-    public List<ChallengeResponse> getNotStartedChallengeList(Long lastId, int pageSize, Integer categoryId) {
+    public List<ChallengeResponse> getNotStartedChallengeList(Long lastId, int pageSize, Integer categoryId, Integer targetAmount) {
 
         List<ChallengeResponse> responseList = new ArrayList<>();
         List<Challenge> challengeList;
         if (categoryId == -1){
-            challengeList = challengeRepository.findAllNotStarted(pageSize, lastId, LocalDate.now());
+            if (targetAmount == -1){
+                challengeList = challengeRepository.findAllNotStarted(pageSize, lastId, LocalDate.now());
+            } else {
+                challengeList = challengeRepository.findAllNotStartedByTargetAmount(pageSize, lastId, LocalDate.now(), targetAmount);
+            }
+
         } else{
-            challengeList = challengeRepository.findAllNotStartedByCategory(pageSize, lastId, LocalDate.now(), categoryId);
+            if (targetAmount == -1) {
+                challengeList = challengeRepository.findAllNotStartedByCategory(pageSize, lastId, LocalDate.now(), categoryId);
+            } else {
+                challengeList = challengeRepository.findAllNotStartedByCategoryAndTargetAmount(pageSize, lastId, LocalDate.now(), categoryId, targetAmount);
+            }
         }
         for (Challenge challenge: challengeList){
             ChallengeResponse challengeResponse = ChallengeResponse.builder()
