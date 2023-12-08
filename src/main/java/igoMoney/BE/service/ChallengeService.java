@@ -254,9 +254,26 @@ public class ChallengeService {
 
     @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
     public void startChallenge(){
-        List<Challenge> challengeList = challengeRepository.findAllByStartDateAndStatus( LocalDate.now(),"recruited");
-        for(Challenge c : challengeList){
+        List<Challenge> challenges = challengeRepository.findAllByStartDateAndStatus( LocalDate.now(),"recruited");
+        for(Challenge c : challenges){
             c.startChallenge();
+        }
+    }
+
+    @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    public void handleUnmatchedChallenge(){
+        List<Challenge> challenges = challengeRepository.findAllByStartDateAndStatus( LocalDate.now(),"notStarted");
+        for(Challenge c : challenges){
+            c.setChallengeUnmatched();
+            User findUser = getUserOrThrow(c.getLeaderId());
+            findUser.updateUserStatus(false, null);  // 사용자 챌린지 상태 변경
+            findUser.resetReportedCount();
+            Notification notification = Notification.builder()
+                    .user(findUser)
+                    .title("챌린지 현황")
+                    .message(findUser.getNickname() +"님! 지정하신 챌린지 시작일까지 상대방 매칭이 안 되어서 챌린지가 취소되었어요. 새로운 챌린지를 도전해보세요.")
+                    .build();
+            notificationService.makeNotification(notification);
         }
     }
 
@@ -264,12 +281,12 @@ public class ChallengeService {
     @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
     public void finishChallenge() {
 
-        List<Challenge> challengeList = challengeRepository.findAllByStatus("inProgress");
+        List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
         Integer minCost = 99999999;
         Long winnerId = null;
         Boolean check =false;
         Integer tempCost = 99999999;
-        for (Challenge c : challengeList) {
+        for (Challenge c : challenges) {
             if (c.getStartDate().plusDays(7).isEqual(LocalDate.now())){
                 // Challenge : 챌린지 종료 설정
                 c.finishChallenge();
@@ -428,12 +445,12 @@ public class ChallengeService {
     // 챌린지 참가자 정보 조회
     private List<User> getAllChallengeUser(Long challengeId) {
 
-        List<User> userList = new ArrayList<>();
+        List<User> users = new ArrayList<>();
         List<ChallengeUser> challengeUserList = challengeUserRepository.findAllByChallengeId(challengeId);
         for (ChallengeUser c : challengeUserList) {
-            userList.add(c.getUser());
+            users.add(c.getUser());
         }
-        return userList;
+        return users;
     }
 
     // 특정 챌린지에 유저가 참여했는지 조회
