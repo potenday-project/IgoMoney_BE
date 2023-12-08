@@ -35,7 +35,7 @@ public class Challenge extends BaseEntity  {
     private Integer term=7; // days
     private LocalDate endDate;
     @Builder.Default
-    private String status="notStarted"; // notStarted/inProgress/cancel/done
+    private String status="notStarted"; // notStarted/recruited/inProgress/cancel/done/unmatched
 
     @Builder.Default
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL)
@@ -61,7 +61,9 @@ public class Challenge extends BaseEntity  {
         return challenge;
     }
 
-    public void startChallenge() { this.startDate = LocalDate.now().plusDays(1); this.status = "inProgress";}
+    public void startChallenge() { this.status = "inProgress";}
+    public void setChallengeRecruited() { this.status = "recruited"; }
+    public void setChallengeUnmatched() { this.status = "unmatched"; }
     public void stopChallenge() { this.endDate = LocalDate.now(); this.status = "cancel";}
     public void finishChallenge() { this.endDate = LocalDate.now().plusDays(-1); this.status = "done";}
     public void setWinner(Long userId) { this.winnerId = userId;}
