@@ -145,6 +145,7 @@ public class ChallengeService {
             throw new CustomException(ErrorCode.EXIST_USER_CHALLENGE);
         }
         Challenge findChallenge = getChallengeOrThrow(challengeId);
+        findChallenge.setChallengeRecruited();
         findUser.updateUserStatus(true, challengeId); // 챌린지 참여 정보 업데이트
         findUser.addChallengeCount();
 
@@ -249,6 +250,14 @@ public class ChallengeService {
                 .totalCost(cost)
                 .build();
         return response;
+    }
+
+    @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    public void startChallenge(){
+        List<Challenge> challengeList = challengeRepository.findAllByStartDateAndStatus( LocalDate.now(),"recruited");
+        for(Challenge c : challengeList){
+            c.startChallenge();
+        }
     }
 
     // 챌린지 완료 (마지막날까지 성공)
