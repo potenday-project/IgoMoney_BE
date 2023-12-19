@@ -191,21 +191,21 @@ public class ChallengeService {
     public void cancelChallenge(User user, Integer sel) {
 
         Challenge findChallenge = getChallengeOrThrow(user.getMyChallengeId());
-
+        String beforeStatus = findChallenge.getStatus();
         findChallenge.stopChallenge(); // 챌린지 중단 설정
-        user.updateUserStatus(false, null);  // 사용자 챌린지 상태 변경
-        user.resetReportedCount();
 
-        User user2 = getChallengeOtherUser(user.getMyChallengeId(), user.getId());
+        setUserNotInChallengeAndInitReportedCount(user);
+        User user2 = getChallengeOtherUser(findChallenge.getId(), user.getId());
         if (user2 == null){ return;} // 상대방 없을 때
 
         // 상대방 있을 때
         user.deleteBadge(); // 뱃지 개수 차감하기
-        user2.updateUserStatus(false, null); // 상대방 챌린지 상태 변경
-        user2.resetReportedCount();
-        user2.addBadge();
-        user2.addWinCount();
-        findChallenge.setWinner(user2.getId());
+        setUserNotInChallengeAndInitReportedCount(user2);
+        if (beforeStatus.equals("inProgress")){
+            user2.addBadge();
+            user2.addWinCount();
+            findChallenge.setWinner(user2.getId());
+        }
 
 
         // 상대방에게 챌린지 중단 알림 보내기
@@ -266,8 +266,7 @@ public class ChallengeService {
         for(Challenge c : challenges){
             c.setChallengeUnmatched();
             User findUser = getUserOrThrow(c.getLeaderId());
-            findUser.updateUserStatus(false, null);  // 사용자 챌린지 상태 변경
-            findUser.resetReportedCount();
+            setUserNotInChallengeAndInitReportedCount(findUser);
             Notification notification = Notification.builder()
                     .user(findUser)
                     .title("챌린지 현황")
@@ -322,8 +321,7 @@ public class ChallengeService {
                 User lose = getChallengeOtherUser(c.getId(), winnerId);
                 for(User u : userList) {
                     // 유저 : 챌린지 종료로 설정
-                    u.updateUserStatus(false, null);
-                    u.resetReportedCount();
+                    setUserNotInChallengeAndInitReportedCount(u);
                 }
             }
         }
@@ -460,5 +458,10 @@ public class ChallengeService {
         if(cu==null){
             throw new CustomException(ErrorCode.USER_NOT_FOUND_IN_THE_CHALLENGE);
         }
+    }
+
+    private void setUserNotInChallengeAndInitReportedCount(User user){
+        user.updateUserStatus(false, null); // 상대방 챌린지 상태 변경
+        user.resetReportedCount();
     }
 }
