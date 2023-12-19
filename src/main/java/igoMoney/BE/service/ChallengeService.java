@@ -88,7 +88,7 @@ public class ChallengeService {
             user2Id = user2.getId();
         }
 
-        ChallengeResponse response = ChallengeResponse.builder()
+        return ChallengeResponse.builder()
                 .id(challenge.getId())
                 .leaderId(challenge.getLeaderId())
                 .competitorId(user2Id)
@@ -99,8 +99,6 @@ public class ChallengeService {
                 .startDate(challenge.getStartDate())
                 .term(challenge.getTerm())
                 .build();
-
-        return response;
     }
 
     // 챌린지 등록하기
@@ -108,7 +106,7 @@ public class ChallengeService {
 
         User findUser = getUserOrThrow(request.getUserId());
         // 이미 참여중인 챌린지가 있거나 (시작 대기중인)등록한 챌린지가 있음. 챌린지 종료 후 다시 등록 가능
-        if (findUser.getInChallenge() != false) {
+        if (findUser.getInChallenge()) {
             throw new CustomException(ErrorCode.EXIST_USER_CHALLENGE);
         }
 
@@ -158,13 +156,8 @@ public class ChallengeService {
 
         // 상대방에게 챌린지 참가 신청 알림 보내기
         User user2 = getChallengeOtherUser(challengeId, userId);
-        Notification notification = Notification.builder()
-                .user(user2)
-                .title("챌린지 현황")
-                .message(user2.getNickname()+"님! "+findUser.getNickname()+"님과 챌린지가 "+findChallenge.getStartDate().format(dateFormat)+"부터 시작되어요. 챌린지 시작 전에 지출 계획을 세워보세요!")
-                .build();
-        notificationService.makeNotification(notification);
-
+        sendNotification(user2, "챌린지 현황", user2.getNickname()+"님! "+findUser.getNickname()+"님과 챌린지가 "+
+                findChallenge.getStartDate().format(dateFormat)+"부터 시작돼요. 챌린지 시작 전에 지출 계획을 세워보세요!");
     }
 
     // 챌린지 포기하기
@@ -191,65 +184,51 @@ public class ChallengeService {
     public void cancelChallenge(User user, Integer sel) {
 
         Challenge findChallenge = getChallengeOrThrow(user.getMyChallengeId());
-
+        String beforeStatus = findChallenge.getStatus();
         findChallenge.stopChallenge(); // 챌린지 중단 설정
-        user.updateUserStatus(false, null);  // 사용자 챌린지 상태 변경
-        user.resetReportedCount();
 
-        User user2 = getChallengeOtherUser(user.getMyChallengeId(), user.getId());
+        setUserNotInChallengeAndInitReportedCount(user);
+        User user2 = getChallengeOtherUser(findChallenge.getId(), user.getId());
         if (user2 == null){ return;} // 상대방 없을 때
 
         // 상대방 있을 때
         user.deleteBadge(); // 뱃지 개수 차감하기
-        user2.updateUserStatus(false, null); // 상대방 챌린지 상태 변경
-        user2.resetReportedCount();
-        user2.addBadge();
-        user2.addWinCount();
-        findChallenge.setWinner(user2.getId());
+        setUserNotInChallengeAndInitReportedCount(user2);
+        if (beforeStatus.equals("inProgress")){
+            user2.addBadge();
+            user2.addWinCount();
+            findChallenge.setWinner(user2.getId());
+        }
 
 
         // 상대방에게 챌린지 중단 알림 보내기
         if(sel==0){
-            Notification notification = Notification.builder()
-                    .user(user2)
-                    .title("챌린지 결과")
-                    .message("상대방 "+ user.getNickname() +"님이 챌린지를 포기했어요.")
-                    .build();
-            notificationService.makeNotification(notification);
+            sendNotification(user2, "챌린지 결과", "상대방 "+ user.getNickname() +"님이 챌린지를 포기했어요.");
         }
         else if (sel==1){
-            Notification notification = Notification.builder()
-                    .user(user2)
-                    .title("챌린지 결과")
-                    .message(user2.getNickname()+"님! 상대방 "+ user.getNickname() +"님이 3일 연속 미출석으로 패배하셨어요.")
-                    .build();
-            notificationService.makeNotification(notification);
+            sendNotification(user2, "챌린지 결과", user2.getNickname()+"님! 상대방 "+ user.getNickname() +
+                    "님이 3일 연속 미출석으로 패배하셨어요.");
         }
         else if (sel==2){
-            Notification notification = Notification.builder()
-                    .user(user2)
-                    .title("챌린지 결과")
-                    .message(user2.getNickname()+"님! 상대방 "+ user.getNickname() +"님이 신고 누적으로 패배하셨어요.")
-                    .build();
-            notificationService.makeNotification(notification);
+            sendNotification(user2, "챌린지 결과", user2.getNickname()+"님! 상대방 "+ user.getNickname() +
+                    "님이 신고 누적으로 패배하셨어요.");
         }
     }
 
     // 챌린지의 각 사용자별 누적금액 조회
     public ChallengeTotalCostResponse getTotalCostPerChallengeUser(Long challengeId, Long userId) {
 
-        User findUser = getUserOrThrow(userId);
+        getUserOrThrow(userId);
         checkIfUserInTheChallenge(userId, challengeId);
         List<Object[]> obs =  recordRepository.calculateTotalCostByUserId(challengeId, userId);
-        Integer cost = 0;
-        if(obs.size() != 0 && obs.get(0)[1]!=null){
+        int cost = 0;
+        if(!obs.isEmpty() && obs.get(0)[1]!=null){
             cost = ((BigDecimal) obs.get(0)[1]).intValue(); // BigInteger
         }
-        ChallengeTotalCostResponse response = ChallengeTotalCostResponse.builder()
+        return ChallengeTotalCostResponse.builder()
                 .userId(userId)
                 .totalCost(cost)
                 .build();
-        return response;
     }
 
     @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
@@ -266,14 +245,9 @@ public class ChallengeService {
         for(Challenge c : challenges){
             c.setChallengeUnmatched();
             User findUser = getUserOrThrow(c.getLeaderId());
-            findUser.updateUserStatus(false, null);  // 사용자 챌린지 상태 변경
-            findUser.resetReportedCount();
-            Notification notification = Notification.builder()
-                    .user(findUser)
-                    .title("챌린지 현황")
-                    .message(findUser.getNickname() +"님! 지정하신 챌린지 시작일까지 상대방 매칭이 안 되어서 챌린지가 취소되었어요. 새로운 챌린지를 도전해보세요.")
-                    .build();
-            notificationService.makeNotification(notification);
+            setUserNotInChallengeAndInitReportedCount(findUser);
+            sendNotification(findUser, "챌린지 현황", findUser.getNickname() +
+                    "님! 지정하신 챌린지 시작일까지 상대방 매칭이 안 되어서 챌린지가 취소되었어요. 새로운 챌린지를 도전해보세요.");
         }
     }
 
@@ -282,10 +256,9 @@ public class ChallengeService {
     public void finishChallenge() {
 
         List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
-        Integer minCost = 99999999;
+        int minCost = 99999999;
         Long winnerId = null;
-        Boolean check =false;
-        Integer tempCost = 99999999;
+        boolean matchTied =false;
         for (Challenge c : challenges) {
             if (c.getStartDate().plusDays(7).isEqual(LocalDate.now())){
                 // Challenge : 챌린지 종료 설정
@@ -295,8 +268,7 @@ public class ChallengeService {
                 List<Object[]> totalCosts =  recordRepository.calculateTotalCostByChallengeId(c.getId());
                 for (Object[] obj: totalCosts){
                     if(((BigDecimal) obj[1]).intValue() == minCost){
-                        check = true;
-                        tempCost = minCost;
+                        matchTied = true;
                     }
                     else if (((BigDecimal) obj[1]).intValue() < minCost){
                         minCost = ((BigDecimal) obj[1]).intValue();
@@ -304,26 +276,23 @@ public class ChallengeService {
                     }
                 }
                 // 동점자 처리
-                List<User> userList = getAllChallengeUser(c.getId());
-                User findWinner = getUserOrThrow(winnerId);
-                if (tempCost == minCost){
+                List<User> users = getAllChallengeUser(c.getId());
+                User winner = getUserOrThrow(winnerId);
+                if (matchTied){
                     c.setWinner(-1L);
-                    for (User u : userList) {
+                    for (User u : users) {
                         u.addBadge();
                         u.addWinCount();
                     }
                 } else {
                     c.setWinner(winnerId);
-                    findWinner.addBadge();
-                    findWinner.addWinCount();
+                    winner.addBadge();
+                    winner.addWinCount();
                 }
 
-                // 챌린지 완료 알림
-                User lose = getChallengeOtherUser(c.getId(), winnerId);
-                for(User u : userList) {
-                    // 유저 : 챌린지 종료로 설정
-                    u.updateUserStatus(false, null);
-                    u.resetReportedCount();
+                // 유저 : 챌린지 종료로 설정
+                for(User u : users) {
+                    setUserNotInChallengeAndInitReportedCount(u);
                 }
             }
         }
@@ -334,21 +303,18 @@ public class ChallengeService {
     // 챌린지 출석 확인
     @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
     public void checkAttendance() {
-        Integer check = 0;
+        int check;
         List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
         for (Challenge c : challenges){
             check= 0;
-            if(c.getStartDate().plusDays(3).isEqual(LocalDate.now()) || c.getStartDate().plusDays(3).isBefore(LocalDate.now())){
+            if(c.getStartDate().plusDays(3).isEqual(LocalDate.now()) ||
+                    c.getStartDate().plusDays(3).isBefore(LocalDate.now())){
                 List<User> users = getAllChallengeUser(c.getId());
                 for (User u : users){
                     // 3일 연속 기록한 record 없다면 패배처리
                     if (recordRepository.countByUserIdAndDate(u.getId(), LocalDate.now()) ==0){
-                        Notification absentNotification = Notification.builder()
-                                .user(u)
-                                .title("챌린지 결과")
-                                .message(u.getNickname()+"님! 지출내역을 3일 동안 인증하지 않아서 해당 챌린지에서 패배하셨어요.")
-                                .build();
-                        notificationService.makeNotification(absentNotification);
+                        sendNotification(u, "챌린지 결과", u.getNickname()+
+                                "님! 지출내역을 3일 동안 인증하지 않아서 해당 챌린지에서 패배하셨어요.");
                         if(check==1){ // 유저 둘 다 미출석
                             u.deleteBadge();
                             u.deleteBadge();
@@ -372,12 +338,8 @@ public class ChallengeService {
             List<User> users = getAllChallengeUser(c.getId());
             for (User u : users){
                 if(!recordRepository.existsByUserIdAndDate(u.getId(), LocalDate.now())){
-                    Notification remindRecordNotification = Notification.builder()
-                            .user(u)
-                            .title("챌린지 현황")
-                            .message(u.getNickname()+"님! 오늘 지출 내역을 인증하지 않으셨어요. 오늘의 지출 내역을 인증해주세요.")
-                            .build();
-                    notificationService.makeNotification(remindRecordNotification);
+                    sendNotification(u, "챌린지 현황", u.getNickname()+
+                            "님! 오늘 지출 내역을 인증하지 않으셨어요. 오늘의 지출 내역을 인증해주세요.");
                 }
             }
         }
@@ -391,26 +353,14 @@ public class ChallengeService {
             for(User u: users){
                 User otherUser = getChallengeOtherUser(c.getId(), u.getId());
                 if(c.getWinnerId() == -1L){
-                    Notification notification = Notification.builder()
-                            .user(u)
-                            .title("챌린지 결과")
-                            .message(u.getNickname()+"님! "+otherUser.getNickname()+"님과의 챌린지 대결에서 무승부가 되어 두 분 다 뱃지를 획득하게 되었어요. 새로운 챌린지를 도전해보세요.")
-                            .build();
-                    notificationService.makeNotification(notification);
-                } else if(u.getId() == c.getWinnerId()){
-                    Notification notification = Notification.builder()
-                            .user(u)
-                            .title("챌린지 결과")
-                            .message(u.getNickname()+"님! "+otherUser.getNickname()+"님과의 챌린지 대결에서 승리하셔서 뱃지를 획득하게 되었어요. \uD83E\uDD47") // 🥇
-                            .build();
-                    notificationService.makeNotification(notification);
+                    sendNotification(u, "챌린지 결과", u.getNickname()+"님! "+otherUser.getNickname()+
+                            "님과의 챌린지 대결에서 무승부가 되어 두 분 다 뱃지를 획득하게 되었어요. 새로운 챌린지를 도전해보세요.");
+                } else if(u.getId().equals(c.getWinnerId())){
+                    sendNotification(u, "챌린지 결과", u.getNickname()+"님! "+otherUser.getNickname()+
+                            "님과의 챌린지 대결에서 승리하셔서 뱃지를 획득하게 되었어요. \uD83E\uDD47"); // 🥇
                 } else {
-                    Notification notification = Notification.builder()
-                            .user(u)
-                            .title("챌린지 결과")
-                            .message(u.getNickname()+"님! "+otherUser.getNickname()+"님과의 챌린지 대결에서 아쉽게 승리하지 못했어요. 새로운 챌린지를 도전해보세요. \uD83D\uDE25") //😥
-                            .build();
-                    notificationService.makeNotification(notification);
+                    sendNotification(u, "챌린지 결과",u.getNickname()+"님! "+otherUser.getNickname()+
+                            "님과의 챌린지 대결에서 아쉽게 승리하지 못했어요. 새로운 챌린지를 도전해보세요. \uD83D\uDE25"); //😥
                 }
             }
 
@@ -435,7 +385,7 @@ public class ChallengeService {
     private User getChallengeOtherUser(Long challengeId, Long userId) {
         List<ChallengeUser> ChallengeUserList = challengeUserRepository.findAllByChallengeId(challengeId);
         for (ChallengeUser c : ChallengeUserList) {
-            if(c.getUser().getId() != userId){
+            if(!c.getUser().getId().equals(userId)){
                 return c.getUser();
             }
         }
@@ -460,5 +410,19 @@ public class ChallengeService {
         if(cu==null){
             throw new CustomException(ErrorCode.USER_NOT_FOUND_IN_THE_CHALLENGE);
         }
+    }
+
+    private void setUserNotInChallengeAndInitReportedCount(User user){
+        user.updateUserStatus(false, null); // 상대방 챌린지 상태 변경
+        user.resetReportedCount();
+    }
+
+    private void sendNotification(User user, String title, String message){
+        Notification notification = Notification.builder()
+                .user(user)
+                .title(title)
+                .message(message)
+                .build();
+        notificationService.makeNotification(notification);
     }
 }
