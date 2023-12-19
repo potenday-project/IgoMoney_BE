@@ -2,10 +2,14 @@ package igoMoney.BE.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
-import igoMoney.BE.domain.Notification;
+import com.google.firebase.messaging.Notification;
+import igoMoney.BE.common.exception.CustomException;
+import igoMoney.BE.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.util.concurrent.ExecutionException;
 
 @Repository
 @RequiredArgsConstructor
@@ -13,15 +17,20 @@ public class FCMTokenService {
 
     private final StringRedisTemplate tokenRedisTemplate;
 
-    public void sendNotification(Notification notification) {
-        Long userId = notification.getUser().getId();
-        if(!hasKey(userId)){ return;}
+    public void sendNotification(String title, String content, Long userId) {
+        if(!hasKey(userId)){
+            throw new CustomException(ErrorCode.FCM_TOKEN_INVALID);
+        }
         String token = getToken(userId);
+        Notification fcmNotification = Notification.builder()
+                .setTitle(title)
+                .setBody(content)
+                .build();
+
         Message message = Message.builder()
-                .putData("title", notification.getTitle())
-                .putData("content", notification.getMessage())
-                .putData("userId", String.valueOf(userId))
                 .setToken(token)
+                .setNotification(fcmNotification)
+                .putData("userId", String.valueOf(userId))
                 .build();
         sendMessage(message);
     }
@@ -43,7 +52,12 @@ public class FCMTokenService {
         return tokenRedisTemplate.hasKey(String.valueOf(userId));
     }
 
-    private void sendMessage(Message message) {
-        FirebaseMessaging.getInstance().sendAsync(message);
+    public void sendMessage(Message message) {
+        try {
+            FirebaseMessaging.getInstance().sendAsync(message).get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+            throw new CustomException(ErrorCode.FCM_MESSAGE_FAILED);
+        }
     }
 }

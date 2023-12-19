@@ -27,6 +27,9 @@ public enum ErrorCode {
     AUTH_CODE_INVALID(HttpStatus.UNAUTHORIZED, "Authorization Code가 유효하지 않습니다."),
     FCM_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "FCM토큰이 null입니다."),
 
+    // FCM Messaging 예외
+    FCM_MESSAGE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FCM 메세징 오류"),
+
     // login 예외
     LOGIN_CONNECTION_ERROR(HttpStatus.BAD_REQUEST, "로그인 요청 오류"),
     
