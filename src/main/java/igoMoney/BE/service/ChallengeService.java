@@ -88,7 +88,7 @@ public class ChallengeService {
             user2Id = user2.getId();
         }
 
-        ChallengeResponse response = ChallengeResponse.builder()
+        return ChallengeResponse.builder()
                 .id(challenge.getId())
                 .leaderId(challenge.getLeaderId())
                 .competitorId(user2Id)
@@ -99,8 +99,6 @@ public class ChallengeService {
                 .startDate(challenge.getStartDate())
                 .term(challenge.getTerm())
                 .build();
-
-        return response;
     }
 
     // 챌린지 등록하기
@@ -108,7 +106,7 @@ public class ChallengeService {
 
         User findUser = getUserOrThrow(request.getUserId());
         // 이미 참여중인 챌린지가 있거나 (시작 대기중인)등록한 챌린지가 있음. 챌린지 종료 후 다시 등록 가능
-        if (findUser.getInChallenge() != false) {
+        if (findUser.getInChallenge()) {
             throw new CustomException(ErrorCode.EXIST_USER_CHALLENGE);
         }
 
@@ -220,18 +218,17 @@ public class ChallengeService {
     // 챌린지의 각 사용자별 누적금액 조회
     public ChallengeTotalCostResponse getTotalCostPerChallengeUser(Long challengeId, Long userId) {
 
-        User findUser = getUserOrThrow(userId);
+        getUserOrThrow(userId);
         checkIfUserInTheChallenge(userId, challengeId);
         List<Object[]> obs =  recordRepository.calculateTotalCostByUserId(challengeId, userId);
-        Integer cost = 0;
-        if(obs.size() != 0 && obs.get(0)[1]!=null){
+        int cost = 0;
+        if(!obs.isEmpty() && obs.get(0)[1]!=null){
             cost = ((BigDecimal) obs.get(0)[1]).intValue(); // BigInteger
         }
-        ChallengeTotalCostResponse response = ChallengeTotalCostResponse.builder()
+        return ChallengeTotalCostResponse.builder()
                 .userId(userId)
                 .totalCost(cost)
                 .build();
-        return response;
     }
 
     @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
@@ -259,10 +256,9 @@ public class ChallengeService {
     public void finishChallenge() {
 
         List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
-        Integer minCost = 99999999;
+        int minCost = 99999999;
         Long winnerId = null;
-        Boolean check =false;
-        Integer tempCost = 99999999;
+        boolean matchTied =false;
         for (Challenge c : challenges) {
             if (c.getStartDate().plusDays(7).isEqual(LocalDate.now())){
                 // Challenge : 챌린지 종료 설정
@@ -272,8 +268,7 @@ public class ChallengeService {
                 List<Object[]> totalCosts =  recordRepository.calculateTotalCostByChallengeId(c.getId());
                 for (Object[] obj: totalCosts){
                     if(((BigDecimal) obj[1]).intValue() == minCost){
-                        check = true;
-                        tempCost = minCost;
+                        matchTied = true;
                     }
                     else if (((BigDecimal) obj[1]).intValue() < minCost){
                         minCost = ((BigDecimal) obj[1]).intValue();
@@ -281,24 +276,22 @@ public class ChallengeService {
                     }
                 }
                 // 동점자 처리
-                List<User> userList = getAllChallengeUser(c.getId());
-                User findWinner = getUserOrThrow(winnerId);
-                if (tempCost == minCost){
+                List<User> users = getAllChallengeUser(c.getId());
+                User winner = getUserOrThrow(winnerId);
+                if (matchTied){
                     c.setWinner(-1L);
-                    for (User u : userList) {
+                    for (User u : users) {
                         u.addBadge();
                         u.addWinCount();
                     }
                 } else {
                     c.setWinner(winnerId);
-                    findWinner.addBadge();
-                    findWinner.addWinCount();
+                    winner.addBadge();
+                    winner.addWinCount();
                 }
 
-                // 챌린지 완료 알림
-                User lose = getChallengeOtherUser(c.getId(), winnerId);
-                for(User u : userList) {
-                    // 유저 : 챌린지 종료로 설정
+                // 유저 : 챌린지 종료로 설정
+                for(User u : users) {
                     setUserNotInChallengeAndInitReportedCount(u);
                 }
             }
@@ -310,7 +303,7 @@ public class ChallengeService {
     // 챌린지 출석 확인
     @Scheduled(cron="0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
     public void checkAttendance() {
-        Integer check = 0;
+        int check;
         List<Challenge> challenges = challengeRepository.findAllByStatus("inProgress");
         for (Challenge c : challenges){
             check= 0;
@@ -362,7 +355,7 @@ public class ChallengeService {
                 if(c.getWinnerId() == -1L){
                     sendNotification(u, "챌린지 결과", u.getNickname()+"님! "+otherUser.getNickname()+
                             "님과의 챌린지 대결에서 무승부가 되어 두 분 다 뱃지를 획득하게 되었어요. 새로운 챌린지를 도전해보세요.");
-                } else if(u.getId() == c.getWinnerId()){
+                } else if(u.getId().equals(c.getWinnerId())){
                     sendNotification(u, "챌린지 결과", u.getNickname()+"님! "+otherUser.getNickname()+
                             "님과의 챌린지 대결에서 승리하셔서 뱃지를 획득하게 되었어요. \uD83E\uDD47"); // 🥇
                 } else {
@@ -392,7 +385,7 @@ public class ChallengeService {
     private User getChallengeOtherUser(Long challengeId, Long userId) {
         List<ChallengeUser> ChallengeUserList = challengeUserRepository.findAllByChallengeId(challengeId);
         for (ChallengeUser c : ChallengeUserList) {
-            if(c.getUser().getId() != userId){
+            if(!c.getUser().getId().equals(userId)){
                 return c.getUser();
             }
         }
