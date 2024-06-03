@@ -42,6 +42,11 @@
 
 <br>
 
+## ERD
+![image](https://github.com/potenday-project/IgoMoney_BE/assets/101239440/8845359f-2365-48e0-b5a8-930dab8f43e5)
+
+<br>
+
 ## 📎 Link
 - [IOS Repository](https://github.com/potenday-project/IgoMoney_iOS)
 - [App store (운영 중단)](https://apps.apple.com/kr/app/igomoney/id6467229873)
